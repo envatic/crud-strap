@@ -1,0 +1,13 @@
+%%formFieldsHtml%%
+
+<div class="form-group">
+    <div class="col-md-offset-4 col-md-4">
+        <input class="btn btn-primary" type="submit" value="{{ $submitButtonText ?? 'Create' }}">
+    </div>
+</div>
+
+@push('js')
+<!-- Laravel Javascript Validation -->
+ <script type="text/javascript" src="{{ asset('vendor/jsvalidation/js/jsvalidation.js')}}"></script>
+ {!! $jsvalidator !!}
+@endpush

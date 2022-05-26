@@ -8,16 +8,16 @@ To customize or change the template, you need to follow these steps:
 
 1. Just make sure you've published all assets of this package. If you didn't just run this command.
     ```php
-    php artisan vendor:publish --provider="Appzcoder\CrudGenerator\CrudGeneratorServiceProvider"
+    php artisan vendor:publish --provider="Envatic\CrudStrap\CrudStrapServiceProvider"
     ```
-2. To override the default template with yours, turn on `custom_template` option in the `config/crudgenerator.php` file.
+2. To override the default template with yours, turn on `custom_template` option in the `config/crudstrap.php` file.
     ```php
     'custom_template' => true,
     ```
 
-3. Now you can customize everything from this `resources/crud-generator/` directory.
+3. Now you can customize everything from this `resources/crud-strap/` directory.
 
-4. Even if you need to use any custom variable just add those in the `config/crudgenerator.php` file.
+4. Even if you need to use any custom variable just add those in the `config/crudstrap.php` file.
 
 ### Form Helper
 
@@ -28,9 +28,9 @@ To use the any other form helper, you need to follow these steps:
 
 1. Make sure you've installed & configured the desire helper package.
 
-2. For use custom helper template, you should turn on `custom_template` option in the `config/crudgenerator.php` file.
+2. For use custom helper template, you should turn on `custom_template` option in the `config/crudstrap.php` file.
 
-3. Now put your files into `resources/crud-generator/views/` directory. Suppose your helper is `myformhelper` then you should create a directory as `resources/crud-generator/views/myformhelper`. You can also copy the template files from other helper directory, then modify as yours.
+3. Now put your files into `resources/crud-strap/views/` directory. Suppose your helper is `myformhelper` then you should create a directory as `resources/crud-strap/views/myformhelper`. You can also copy the template files from other helper directory, then modify as yours.
 
 4. You're ready to generate the CRUD with your helper.
     ```

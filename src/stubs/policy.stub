@@ -1,0 +1,106 @@
+<?php
+/** dev:
+    *Stephen Isaac:  ofuzak@gmail.com.
+    *Skype: ofuzak
+ */
+
+namespace DummyNamespace;
+
+use NamespacedDummyUserModel;
+use NamespacedDummyModel;
+use Illuminate\Auth\Access\HandlesAuthorization;
+
+class DummyClass
+{
+    use HandlesAuthorization;
+	
+	public function before(DummyUser $user)
+	{
+		if ($user->isAdmin()) {
+			return true;
+		}
+	}
+	
+	 /**
+     * Determine whether the user can view the DocDummyModel.
+     *
+     * @param  \NamespacedDummyUserModel  $user
+     * @param  \NamespacedDummyModel  $dummyModel
+     * @return mixed
+     */
+    public function viewAny(DummyUser $user, DummyModel $dummyModel)
+    {
+        return $user->hasPermission('viewany.dummyModel') || true;
+    }
+
+    /**
+     * Determine whether the user can view the DocDummyModel.
+     *
+     * @param  \NamespacedDummyUserModel  $user
+     * @param  \NamespacedDummyModel  $dummyModel
+     * @return mixed
+     */
+    public function view(DummyUser $user, DummyModel $dummyModel)
+    {
+		return $user->hasPermission('view.dummyModel') || true;
+    }
+
+    /**
+     * Determine whether the user can create DocDummyPluralModel.
+     *
+     * @param  \NamespacedDummyUserModel  $user
+     * @return mixed
+     */
+    public function create(DummyUser $user)
+    {
+		return $user->hasPermission('create.dummyModel') || true;
+    }
+
+    /**
+     * Determine whether the user can update the DocDummyModel.
+     *
+     * @param  \NamespacedDummyUserModel  $user
+     * @param  \NamespacedDummyModel  $dummyModel
+     * @return mixed
+     */
+    public function update(DummyUser $user, DummyModel $dummyModel)
+    {
+        return $user->hasPermission('update.dummyModel') || $user->id == $dummyModel->user_id;
+    }
+
+    /**
+     * Determine whether the user can delete the DocDummyModel.
+     *
+     * @param  \NamespacedDummyUserModel  $user
+     * @param  \NamespacedDummyModel  $dummyModel
+     * @return mixed
+     */
+    public function delete(DummyUser $user, DummyModel $dummyModel)
+    {
+        return  $user->hasPermission('delete.dummyModel')||$user->id == $dummyModel->user_id;
+    }
+
+    /**
+     * Determine whether the user can restore the DocDummyModel.
+     *
+     * @param  \NamespacedDummyUserModel  $user
+     * @param  \NamespacedDummyModel  $dummyModel
+     * @return mixed
+     */
+    public function restore(DummyUser $user, DummyModel $dummyModel)
+    {
+         return $user->hasPermission('restore.dummyModel') || $user->id == $dummyModel->user_id;
+    }
+
+    /**
+     * Determine whether the user can permanently delete the DocDummyModel.
+     *
+     * @param  \NamespacedDummyUserModel  $user
+     * @param  \NamespacedDummyModel  $dummyModel
+     * @return mixed
+     */
+    public function forceDelete(DummyUser $user, DummyModel $dummyModel)
+    {
+        return $user->hasPermission('forcedelete.dummyModel') || $user->id == $dummyModel->user_id;		
+    }
+}

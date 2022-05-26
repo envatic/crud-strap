@@ -1,0 +1,48 @@
+
+@extends('layouts.admin')
+@section('title')
+Show %%modelName%% #{{ $%%crudNameSingular%%->%%primaryKey%% }}
+@endsection
+@section('content')
+<div class="content-wrapper"> 
+	<!-- Content Header (Page header) -->
+	<div class="page-heading">
+		<h1 class="page-title">Show %%modelName%% #{{ $%%crudNameSingular%%->%%primaryKey%% }}</h1>
+	</div>
+	<!-- Main content -->
+	<div class="page-content fade-in-up">
+		<div class="row">
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-header">%%modelName%% {{ $%%crudNameSingular%%->%%primaryKey%% }}</div>
+					<div class="card-body">
+						<a href="{{ route('admin.%%crudName%%.index') }}" title="Back"><button class="btn btn-warning btn-sm"><i class="fa fa-arrow-left" aria-hidden="true"></i> Back</button></a>
+						<a href="{{ route('admin.%%crudName%%.edit', $%%crudNameSingular%%->%%primaryKey%% ) }}" title="Show %%modelName%%"><button class="btn btn-primary btn-sm"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Show</button></a>
+						<form method="POST" action="{{route('admin.%%crudName%%.delete', $%%crudNameSingular%%->%%primaryKey%% ) }}" accept-charset="UTF-8" style="display:inline">
+							@method('DELETE')
+							@csrf 
+							<button type="submit" class="btn btn-danger btn-sm" title="Delete %%modelName%%" onclick="return confirm(&quot;Confirm delete?&quot;)"><i class="fa fa-trash-o" aria-hidden="true"></i> Delete</button>
+						</form>
+						<br/>
+						<br/>
+						<div class="table-responsive">
+							<table class="table">
+								<tbody>
+									<tr>
+										<th>ID</th><td>{{ $%%crudNameSingular%%->%%primaryKey%% }}</td>
+									</tr>
+									%%formBodyHtmlForShowView%%
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /.row --> 
+	</div>
+	<!-- /.container-fluid --> 
+	<!-- /.content --> 
+</div>
+@endsection 
+

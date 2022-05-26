@@ -1,9 +1,9 @@
 <?php
 
-namespace Appzcoder\CrudGenerator\Commands;
-
+namespace Envtatic\CrudStrap\Commands;
 use Illuminate\Console\GeneratorCommand;
-
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 class CrudMigrationCommand extends GeneratorCommand
 {
     /**
@@ -16,8 +16,11 @@ class CrudMigrationCommand extends GeneratorCommand
                             {--schema= : The name of the schema.}
                             {--indexes= : The fields to add an index to.}
                             {--foreign-keys= : Foreign keys.}
-                            {--pk=id : The name of the primary key.}
-                            {--soft-deletes=no : Include soft deletes fields.}';
+                            {--pk=id: The name of the primary key.}
+                            {--uuid-pk: Use UUId primary key?.}
+                            {--f|force : Force delete.}
+                            {--prefix= : Used to check if crude is complete.}
+                            {--soft-deletes : Include soft deletes fields.}';
 
     /**
      * The console command description.
@@ -38,30 +41,110 @@ class CrudMigrationCommand extends GeneratorCommand
      *
      * @var array
      */
+
     protected $typeLookup = [
-        'char' => 'char',
-        'date' => 'date',
         'datetime' => 'dateTime',
-        'time' => 'time',
-        'timestamp' => 'timestamp',
-        'text' => 'text',
         'mediumtext' => 'mediumText',
         'longtext' => 'longText',
-        'json' => 'json',
-        'jsonb' => 'jsonb',
-        'binary' => 'binary',
-        'number' => 'integer',
-        'integer' => 'integer',
         'bigint' => 'bigInteger',
         'mediumint' => 'mediumInteger',
         'tinyint' => 'tinyInteger',
         'smallint' => 'smallInteger',
+        'bigIncrements' => 'bigIncrements',
+        'bigInteger' => 'bigInteger',
+        'binary' => 'binary',
         'boolean' => 'boolean',
+        'char' => 'char',
+        'dateTimeTz' => 'dateTimeTz',
+        'dateTime' => 'dateTime',
+        'date' => 'date',
         'decimal' => 'decimal',
         'double' => 'double',
-        'float' => 'float',
         'enum' => 'enum',
+        'float' => 'float',
+        'foreignId' => 'foreignId',
+        'foreignIdFor' => 'foreignIdFor',
+        'foreignUuid' => 'foreignUuid',
+        'geometryCollection' => 'geometryCollection',
+        'geometry' => 'geometry',
+        'id' => 'id',
+        'increments' => 'increments',
+        'integer' => 'integer',
+        'ipAddress' => 'ipAddress',
+        'json' => 'json',
+        'jsonb' => 'jsonb',
+        'lineString' => 'lineString',
+        'longText' => 'longText',
+        'macAddress' => 'macAddress',
+        'mediumIncrements' => 'mediumIncrements',
+        'mediumInteger' => 'mediumInteger',
+        'mediumText' => 'mediumText',
+        'morphs' => 'morphs',
+        'multiPoint' => 'multiPoint',
+        'multiPolygon' => 'multiPolygon',
+        'nullableMorphs' => 'nullableMorphs',
+        'nullableTimestamps' => 'nullableTimestamps',
+        'nullableUuidMorphs' => 'nullableUuidMorphs',
+        'point' => 'point',
+        'polygon' => 'polygon',
+        'rememberToken' => 'rememberToken',
+        'set' => 'set',
+        'smallIncrements' => 'smallIncrements',
+        'smallInteger' => 'smallInteger',
+        'softDeletesTz' => 'softDeletesTz',
+        'softDeletes' => 'softDeletes',
+        'string' => 'string',
+        'text' => 'text',
+        'timeTz' => 'timeTz',
+        'time' => 'time',
+        'timestampTz' => 'timestampTz',
+        'timestamp' => 'timestamp',
+        'timestampsTz' => 'timestampsTz',
+        'timestamps' => 'timestamps',
+        'tinyIncrements' => 'tinyIncrements',
+        'tinyInteger' => 'tinyInteger',
+        'tinyText' => 'tinyText',
+        'unsignedBigInteger' => 'unsignedBigInteger',
+        'unsignedDecimal' => 'unsignedDecimal',
+        'unsignedInteger' => 'unsignedInteger',
+        'unsignedMediumInteger' => 'unsignedMediumInteger',
+        'unsignedSmallInteger' => 'unsignedSmallInteger',
+        'unsignedTinyInteger' => 'unsignedTinyInteger',
+        'uuidMorphs' => 'uuidMorphs',
+        'uuid' => 'uuid',
+        'year' => 'year',
     ];
+
+    protected $migrated = [
+        'name',
+        'email',
+        'email_verified_at',
+        'password',
+        'current_team_id',
+        'profile_photo_path',
+        'timestamps',
+        'rememberToken'
+    ];
+
+    /**
+     * Execute the console command.
+     *
+     * @return bool|null
+     *
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function handle()
+    {
+        $isExists = $this->migrationExists($this->getNameInput());
+        if ((!$this->hasOption('force') ||
+            !$this->option('force'))
+            && $isExists
+        ) {
+            $this->error($this->type . ' already exists!');
+            return false;
+        }
+        parent::handle();
+    }
 
     /**
      * Get the stub file for the generator.
@@ -70,25 +153,11 @@ class CrudMigrationCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return config('crudgenerator.custom_template')
-        ? config('crudgenerator.path') . '/migration.stub'
+        return config('crudstrap.custom_template')
+        ? config('crudstrap.path') . '/migration.stub'
         : __DIR__ . '/../stubs/migration.stub';
     }
 
-    /**
-     * Get the destination class path.
-     *
-     * @param  string  $name
-     *
-     * @return string
-     */
-    protected function getPath($name)
-    {
-        $name = str_replace($this->laravel->getNamespace(), '', $name);
-        $datePrefix = date('Y_m_d_His');
-
-        return database_path('/migrations/') . $datePrefix . '_create_' . $name . '_table.php';
-    }
 
     /**
      * Build the model class with the given name.
@@ -99,74 +168,108 @@ class CrudMigrationCommand extends GeneratorCommand
      */
     protected function buildClass($name)
     {
+
         $stub = $this->files->get($this->getStub());
-
         $tableName = $this->argument('name');
-        $className = 'Create' . str_replace(' ', '', ucwords(str_replace('_', ' ', $tableName))) . 'Table';
-
+        $exists = $this->migrationFile(strtolower($tableName));
+        $isUser = strtolower($tableName) == 'users';
+        $type = $isUser && $exists ? 'Update' : 'Create';
+        $className = $type . str_replace(' ', '', ucwords(str_replace('_', ' ', $tableName))) . 'Table';
         $fieldsToIndex = trim($this->option('indexes')) != '' ? explode(',', $this->option('indexes')) : [];
         $foreignKeys = trim($this->option('foreign-keys')) != '' ? explode(',', $this->option('foreign-keys')) : [];
-
         $schema = rtrim($this->option('schema'), ';');
         $fields = explode(';', $schema);
-
         $data = array();
-
         if ($schema) {
             $x = 0;
             foreach ($fields as $field) {
                 $fieldArray = explode('#', $field);
                 $data[$x]['name'] = trim($fieldArray[0]);
-                $data[$x]['type'] = trim($fieldArray[1]);
-                if (($data[$x]['type'] === 'select'
-                    || $data[$x]['type'] === 'enum')
-                    && isset($fieldArray[2])
-                ) {
+                $modifications = explode('|', $fieldArray[1]);
+                $type = array_shift($modifications);
+                $data[$x]['type'] = $type;
+                if ((Str::startsWith($type, 'select') || Str::startsWith($type, 'enum')) && isset($fieldArray[2])) {
                     $options = trim($fieldArray[2]);
                     $data[$x]['options'] = str_replace('options=', '', $options);
                 }
-
-                $data[$x]['modifier'] = '';
-
-                $modifierLookup = [
-                    'comment',
-                    'default',
-                    'first',
-                    'nullable',
-                    'unsigned',
-                ];
-
-                if (isset($fieldArray[2]) && in_array(trim($fieldArray[2]), $modifierLookup)) {
-                    $data[$x]['modifier'] = "->" . trim($fieldArray[2]) . "()";
+                //string:30|default:'ofumbi'|nullable
+                $data[$x]['modifiers'] = [];
+                if (count($modifications)) {
+                    $modifierLookup = [
+                        'comment',
+                        'default',
+                        'first',
+                        'nullable',
+                        'unsigned',
+                        'unique',
+                        'charset',
+                        'useCurrent',
+                        'constrained',
+                        'onDelete',
+                        'onUpdate',
+                    ];
+                    foreach ($modifications as $modification) {
+                        $variables = explode(':', $modification);
+                        $modifier =   array_shift($variables);
+                        if (!in_array(trim($modifier), $modifierLookup)) continue;
+                        $vars = $variables[0] ?? "";
+                        $data[$x]['modifiers'][] = "->" . trim($modifier) . "(" . $vars . ")";
+                    }
                 }
-
                 $x++;
             }
         }
 
         $tabIndent = '    ';
-
         $schemaFields = '';
+        $schemaDropFields = '';
         foreach ($data as $item) {
-            if (isset($this->typeLookup[$item['type']])) {
-                $type = $this->typeLookup[$item['type']];
-
-                if ($type === 'select' || $type === 'enum') {
+            $data_type = explode(':', $item['type']);
+            $item_type = array_shift($data_type);
+            if (
+                $isUser
+                && in_array(trim($item['name']), $this->migrated)
+                || in_array(trim($item_type), $this->migrated)
+            ) {
+                continue;
+            }
+            $variables = isset($data_type[0]) ? "," . $data_type[0] : "";
+            $schemaDrop = "\$table->dropColumn('{$item['name']}')";
+            $schemaDropForiegn = "\$table->dropForeign(['{$item['name']}']);";
+            $schemaDropFields .= in_array($item_type, ['foreignId', 'foreignIdFor', 'foreignUuid',])
+            ? $schemaDropForiegn
+                : $schemaDrop;
+            if (isset($this->typeLookup[$item_type])) {
+                $type = $this->typeLookup[$item_type];
+                if (!empty($item['options'])) {
                     $enumOptions = array_keys(json_decode($item['options'], true));
                     $enumOptionsStr = implode(",", array_map(function ($string) {
                         return '"' . $string . '"';
                     }, $enumOptions));
-                    $schemaFields .= "\$table->" . $type . "('" . $item['name'] . "', [" . $enumOptionsStr . "])";
+                    $schemaFields .= "\$table->enum('" . $item['name'] . "', [" . $enumOptionsStr . "])";
+                } elseif ($item['name'] == "uuid") {
+                    $schemaFields .= "\$table->uuid('" . $item['name'] . "')";
                 } else {
-                    $schemaFields .= "\$table->" . $type . "('" . $item['name'] . "')";
+                    $schemaFields .= "\$table->" . $type . "('" . $item['name'] . "'" . $variables . ")";
                 }
             } else {
-                $schemaFields .= "\$table->string('" . $item['name'] . "')";
+                if (isset($item['options']) && $item['options']) {
+                    $enumOptions = array_keys(json_decode($item['options'], true));
+                    $enumOptionsStr = implode(",", array_map(function ($string) {
+                        return '"' . $string . '"';
+                    }, $enumOptions));
+                    $schemaFields .= "\$table->enum('" . $item['name'] . "', [" . $enumOptionsStr . "])";
+                } elseif ($item['name'] == "uuid") {
+                    $schemaFields .= "\$table->uuid('" . $item['name'] . "')";
+                } else {
+                    $schemaFields .= "\$table->string('" . $item['name'] . "'" . $variables . ")";
+                }
             }
 
             // Append column modifier
-            $schemaFields .= $item['modifier'];
+            $schemaFields .= implode("", $item['modifiers']);
             $schemaFields .= ";\n" . $tabIndent . $tabIndent . $tabIndent;
+            $schemaDropFields .= ";\n" . $tabIndent . $tabIndent . $tabIndent;
         }
 
         // add indexes and unique indexes as necessary
@@ -193,59 +296,134 @@ class CrudMigrationCommand extends GeneratorCommand
             } else {
                 $schemaFields .= "\$table->index(" . trim($fieldNames) . ")";
             }
-
             $schemaFields .= ";\n" . $tabIndent . $tabIndent . $tabIndent;
         }
 
-        // foreign keys
+        // foreignKeysField
+        $foreignKeysFields = "";
         foreach ($foreignKeys as $fk) {
             $line = trim($fk);
-
             $parts = explode('#', $line);
-
             // if we don't have three parts, then the foreign key isn't defined properly
             // --foreign-keys="foreign_entity_id#id#foreign_entity#onDelete#onUpdate"
+            $iname = trim($parts[0]);
             if (count($parts) == 3) {
-                $schemaFields .= "\$table->foreign('" . trim($parts[0]) . "')"
-                . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')";
+                $schemaDropFields = "\$table->dropForeign(['{$iname}']);";
+                $foreignKeysFields .= "\$table->foreign('" . trim($parts[0]) . "')"
+                    . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')";
             } elseif (count($parts) == 4) {
-                $schemaFields .= "\$table->foreign('" . trim($parts[0]) . "')"
-                . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')"
-                . "->onDelete('" . trim($parts[3]) . "')" . "->onUpdate('" . trim($parts[3]) . "')";
+                $schemaDropFields = "\$table->dropForeign(['{$iname}']);";
+                $foreignKeysFields .= "\$table->foreign('" . trim($parts[0]) . "')"
+                    . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')"
+                    . "->onDelete('" . trim($parts[3]) . "')" . "->onUpdate('" . trim($parts[3]) . "')";
             } elseif (count($parts) == 5) {
-                $schemaFields .= "\$table->foreign('" . trim($parts[0]) . "')"
-                . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')"
-                . "->onDelete('" . trim($parts[3]) . "')" . "->onUpdate('" . trim($parts[4]) . "')";
+                $schemaDropFields = "\$table->dropForeign(['{$iname}']);";
+                $foreignKeysFields .= "\$table->foreign('" . trim($parts[0]) . "')"
+                    . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')"
+                    . "->onDelete('" . trim($parts[3]) . "')" . "->onUpdate('" . trim($parts[4]) . "')";
             } else {
                 continue;
             }
-
-            $schemaFields .= ";\n" . $tabIndent . $tabIndent . $tabIndent;
         }
-
+        $endcolon = $foreignKeysFields == "" ? "" : ";";
+        $foreignKeysFields .= $endcolon . "\n" . $tabIndent . $tabIndent;
         $primaryKey = $this->option('pk');
         $softDeletes = $this->option('soft-deletes');
-
         $softDeletesSnippets = '';
-        if ($softDeletes == 'yes') {
+        if ($softDeletes) {
             $softDeletesSnippets = "\$table->softDeletes();\n" . $tabIndent . $tabIndent . $tabIndent;
+            $softDeletesDropSnippets = "\$table->dropSoftDeletes();\n" . $tabIndent . $tabIndent . $tabIndent;
         }
-
-        $schemaUp =
-            "Schema::create('" . $tableName . "', function (Blueprint \$table) {
-            \$table->increments('" . $primaryKey . "');
-            \$table->timestamps();\n" . $tabIndent . $tabIndent . $tabIndent .
+        $schema_type = $isUser ? 'table' : 'create';
+        $schemaDrop =
+            "Schema::table('" . $tableName . "', function (Blueprint \$table) { \n" . $tabIndent . $tabIndent . $tabIndent .
+            $schemaDropFields .
+            $softDeletesDropSnippets . "\n" . $tabIndent . $tabIndent . "});";
+        $creatSchemaUp = "Schema::create('" . $tableName . "', function (Blueprint \$table) { \n" . $tabIndent . $tabIndent . $tabIndent .
+            "\$table->bigIncrements('" . $primaryKey . "');\n" . $tabIndent . $tabIndent . $tabIndent .
+            $schemaFields . "\$table->timestamps();\n" . $tabIndent . $tabIndent . $tabIndent .
             $softDeletesSnippets .
+            substr($foreignKeysFields, 0, -1) . "});";
+        $updateSchemaUp = "Schema::table('" . $tableName . "', function (Blueprint \$table) { \n" . $tabIndent . $tabIndent . $tabIndent .
             $schemaFields .
-        "});";
-
-        $schemaDown = "Schema::drop('" . $tableName . "');";
-
+            $softDeletesSnippets .
+            substr($foreignKeysFields, 0, -1) . "});";
+        $schemaDown = $isUser
+            ? $schemaDrop
+            : "Schema::drop('" . $tableName . "');";
+        $schemaUp = $isUser ? $updateSchemaUp : $creatSchemaUp;
         return $this->replaceSchemaUp($stub, $schemaUp)
             ->replaceSchemaDown($stub, $schemaDown)
             ->replaceClass($stub, $className);
     }
 
+    /**
+     * Determine if the class already exists.
+     *
+     * @param  string  $rawName
+     * @return bool
+     */
+    protected function migrationExists($rawName)
+    {
+        $is_user =  strtolower($rawName)  == 'users';
+        $exist = $this->migrationFile($rawName);
+        $type = $is_user && $exist ? 'update_' : 'create_';
+        $migration = $type  . strtolower($rawName) . '_table';
+        $filesNames = File::files(base_path() . '/database/migrations/');
+        $exists = false;
+        foreach ($filesNames as $file) {
+            if (Str::contains($file->getFilename(),  $migration)) {
+                $exists = $file->getFilename();
+                if ($this->option('force')) {
+                    File::delete($file->getPathname());
+                    $this->warn('Migration deleted:' . $file->getFilename());
+                    $exists = false;
+                }
+            }
+        }
+        if ($exists) {
+            $this->warn('Migration File Found: ' . $exists);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Determine if the class already exists.
+     *
+     * @param  string  $rawName
+     * @return bool
+     */
+    protected function migrationFile($rawName)
+    {
+        $migration = 'create_' . strtolower($rawName) . '_table';
+        $filesNames = File::files(base_path() . '/database/migrations/');
+        foreach ($filesNames as $file) {
+            if (Str::contains($file->getFilename(),  $migration)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    /**
+     * Get the destination class path.
+     *
+     * @param  string  $name
+     *
+     * @return string
+     */
+    protected function getPath($name)
+    {
+        $name = str_replace($this->laravel->getNamespace(), '', $name);
+        $exists = $this->migrationFile($name);
+        $type = $name == 'users' && $exists ? '_update_' : '_create_';
+        $ms = microtime(true);
+        $mst = Str::of($ms)->explode('.')->all();
+        $sss = $mst[1] ?? 0000;
+        $datePrefix = date('Y_m_d_His');
+        $nameTime = $this->option('prefix') ?? $datePrefix . $sss;
+        return database_path('/migrations/') . $nameTime . $type . $name . '_table.php';
+    }
     /**
      * Replace the schema_up for the given stub.
      *

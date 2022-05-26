@@ -1,8 +1,8 @@
 <?php
 
-namespace Appzcoder\CrudGenerator\Commands;
+namespace Envatic\CrudStrap\Commands;
 
-use File;
+use Illuminate\Support\Facades\File;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 

@@ -1,6 +1,6 @@
 <?php
 
-class CrudGeneratorTest extends TestCase
+class CrudStrapTest extends TestCase
 {
     public function testCrudGenerateCommand()
     {

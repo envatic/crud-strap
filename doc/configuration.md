@@ -1,10 +1,10 @@
 ## Configuration
 
-You will find a configuration file located at `config/crudgenerator.php`
+You will find a configuration file located at `config/crudstrap.php`
 
 ### Custom Template
 
-When you want to use your own custom template files, then you should turn it on and it will use the files from `resources/crud-generator/`
+When you want to use your own custom template files, then you should turn it on and it will use the files from `resources/crud-strap/`
 
 ```php
 'custom_template' => false,
@@ -12,10 +12,10 @@ When you want to use your own custom template files, then you should turn it on 
 
 ### Path
 
-You can change your template path easily, the default path is `resources/crud-generator/`.
+You can change your template path easily, the default path is `resources/crud-strap/`.
 
 ```php
-'path' => base_path('resources/crud-generator/'),
+'path' => base_path('resources/crud-strap/'),
 ```
 
 ### View Columns

@@ -1,5 +1,7 @@
 <?php
-
+/*** dev: Stephen Isaac:  ofuzak@gmail.com>.
+ *Skype: ofuzak
+ */
 return [
     %%messages%%,
 ];

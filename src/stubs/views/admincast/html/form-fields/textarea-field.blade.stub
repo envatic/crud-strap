@@ -1,0 +1,1 @@
+<textarea class="form-control {{ $errors->has('%%itemName%%') ? 'is-invalid' : ''}}" rows="5" name="%%itemName%%" type="%%fieldType%%" id="%%itemName%%" %%required%%>{{ $%%crudNameSingular%%->%%itemName%% ?? ''}}</textarea>

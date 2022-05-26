@@ -1,0 +1,52 @@
+{
+	"fields": [
+		{
+			"name": "user_id",
+			"type": "foreignId|constrained|onUpdate:'cascade'|onDelete:'cascade'",
+			"rules": "required|integer|exists:users,id"
+		},
+		{
+			"name": "name",
+			"type": "string",
+			"rules": "required|string"
+		},
+		{
+			"name": "chain",
+			"type": "string|nullable",
+			"rules": "string|nullable"
+		},
+		{
+			"name": "profile_photo",
+			"type": "string|nullable",
+			"rules": "string|nullable"
+		},
+		{
+			"name": "slug",
+			"type": "string"
+		},
+		{
+			"name": "tagline",
+			"type": "string|nullable",
+			"rules": "string|nullable"
+		},
+
+		{
+			"name": "personal_team",
+			"type": "boolean|default:false",
+			"rules": "nullable|boolean"
+		},
+
+		{
+			"name": "active",
+			"type": "boolean|default:true",
+			"rules": "required|boolean"
+		}
+	],
+	"relationships": [
+		{
+			"name": "user",
+			"type": "belongsTo",
+			"class": "User|user_id|id"
+		}
+	]
+}

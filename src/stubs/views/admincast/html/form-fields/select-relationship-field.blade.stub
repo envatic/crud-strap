@@ -1,0 +1,5 @@
+<select name="%%itemName%%_id" id="%%itemName%%_id" class="form-control select2 {{ $errors->has('%%itemName%%') ? 'is-invalid' : ''}}" %%required%%>
+		@foreach($%%itemName%%s as $%%itemName%%)
+		<option {{ (isset($%%crudNameSingular%%->%%itemName%%_id) && $%%crudNameSingular%%->%%itemName%%_id == $%%itemName%%->id ) ? 'selected' : ''}}  value="{{$%%itemName%%->id}}">{{$%%itemName%%->name}}</option>
+		@endforeach
+	</select>

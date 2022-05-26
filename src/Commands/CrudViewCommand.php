@@ -1,8 +1,8 @@
 <?php
 
-namespace Appzcoder\CrudGenerator\Commands;
+namespace Envatic\CrudStrap\Commands;
 
-use File;
+use Illuminate\Support\Facades\File;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 
@@ -14,16 +14,42 @@ class CrudViewCommand extends Command
      * @var string
      */
     protected $signature = 'crud:view
-        {name : The name of the Crud.}
-        {--fields= : The field names for the form.}
-        {--view-path= : The name of the view path.}
-        {--route-group= : Prefix of the route group.}
-        {--pk=id : The name of the primary key.}
-        {--validations= : Validation rules for the fields.}
-        {--form-helper=html : Helper for the form.}
-        {--custom-data= : Some additional values to use in the crud.}
-        {--localize=no : Localize the view? yes|no.}';
+                            {name : The name of the Crud.}
+                            {--fields= : The field names for the form.}
+                            {--view-path= : The name of the view path.}
+                            {--route-group= : Prefix of the route group.}
+                            {--pk=id : The name of the primary key.}
+                            {--validations= : Validation rules for the fields.}
+                            {--form-helper=html : Helper for the form.}
+                            {--custom-data= : Some additional values to use in the crud.}
+                            {--localize : Localize the view? yes|no.}
+                            {--f|force : Force delete.}
+							{--stub-path= : Optional name of the stubs folder in the view stubs dir.}';
 
+
+    protected $emptyVueForm = '';
+    protected $filledVueForm = '';
+    protected $vars = [
+        'formFields',
+        'formFieldsHtml',
+        'varName',
+        'crudName',
+        'crudNameCap',
+        'crudNameSingular',
+        'primaryKey',
+        'modelName',
+        'modelNameCap',
+        'viewName',
+        'routePrefix',
+        'routePrefixCap',
+        'routeGroup',
+        'formHeadingHtml',
+        'formBodyHtml',
+        'viewTemplateDir',
+        'formBodyHtmlForShowView',
+        'filledVueForm',
+        'emptyVueForm',
+    ];
     /**
      * The console command description.
      *
@@ -38,6 +64,7 @@ class CrudViewCommand extends Command
      */
     protected $viewDirectoryPath;
 
+    
     /**
      *  Form field types collection.
      *
@@ -73,32 +100,53 @@ class CrudViewCommand extends Command
         'enum' => 'select',
         'select' => 'select',
         'file' => 'file',
+        'uuid' => 'text',
+        'bigIncrements' => 'number',
+        'bigInteger' => 'number',
+        'dateTimeTz' => 'datetime-local',
+        'dateTime' => 'datetime-local',
+        'foreignId' => 'number',
+        'foreignIdFor' => 'number',
+        'foreignUuid' => 'number',
+        'geometryCollection' => 'texteara',
+        'geometry' => 'texteara',
+        'increments' => 'number',
+        'ipAddress' => 'text',
+        'jsonb' => 'texteara',
+        'lineString' => 'text',
+        'longText' => 'texteara',
+        'macAddress' => 'text',
+        'mediumIncrements' => 'number',
+        'mediumInteger' => 'number',
+        'mediumText' => 'number',
+        'multiLineString' => 'text',
+        'multiPoint' => 'text',
+        'multiPolygon' => 'text',
+        'nullableTimestamps' => 'datetime-local',
+        'point' => 'text',
+        'polygon' => 'text',
+        'rememberToken' => 'text',
+        'set' => 'text',
+        'smallIncrements' => 'number',
+        'smallInteger' => 'number',
+        'timeTz' => 'datetime-local',
+        'timestampTz' => 'datetime-local',
+        'timestampsTz' => 'datetime-local',
+        'tinyIncrements' => 'number',
+        'tinyInteger' => 'number',
+        'tinyText' => 'number',
+        'unsignedBigInteger' => 'number',
+        'unsignedDecimal' => 'number',
+        'unsignedInteger' => 'number',
+        'unsignedMediumInteger' => 'number',
+        'unsignedSmallInteger' => 'number',
+        'unsignedTinyInteger' => 'number',
+        'uuid' => 'text',
+        'year' => 'datetime-local',
     ];
 
-    /**
-     * Variables that can be used in stubs
-     *
-     * @var array
-     */
-    protected $vars = [
-        'formFields',
-        'formFieldsHtml',
-        'varName',
-        'crudName',
-        'crudNameCap',
-        'crudNameSingular',
-        'primaryKey',
-        'modelName',
-        'modelNameCap',
-        'viewName',
-        'routePrefix',
-        'routePrefixCap',
-        'routeGroup',
-        'formHeadingHtml',
-        'formBodyHtml',
-        'viewTemplateDir',
-        'formBodyHtmlForShowView',
-    ];
+
+    
 
     /**
      * Form's fields.
@@ -222,9 +270,9 @@ class CrudViewCommand extends Command
     /**
      * User defined values
      *
-     * @var array
+     * @var string
      */
-    protected $customData = [];
+    protected $customData = '';
 
     /**
      * Template directory where views are generated
@@ -247,13 +295,13 @@ class CrudViewCommand extends Command
     {
         parent::__construct();
 
-        if (config('crudgenerator.view_columns_number')) {
+        if (config('crudstrap.view_columns_number')) {
             $this
-                ->defaultColumnsToShow = config('crudgenerator.view_columns_number');
+                ->defaultColumnsToShow = config('crudstrap.view_columns_number');
         }
 
-        $this->delimiter = config('crudgenerator.custom_delimiter')
-            ? config('crudgenerator.custom_delimiter')
+        $this->delimiter = config('crudstrap.custom_delimiter')
+            ? config('crudstrap.custom_delimiter')
             : ['%%', '%%'];
     }
 
@@ -262,14 +310,14 @@ class CrudViewCommand extends Command
      *
      * @return void
      */
+
     public function handle()
     {
         $formHelper = $this->option('form-helper');
-        $this->viewDirectoryPath = config('crudgenerator.custom_template')
-            ? config('crudgenerator.path') . 'views/' . $formHelper . '/'
+        $stubs =  ($this->option('stub-path')) ? $this->option('stub-path') . '/' : "";
+        $this->viewDirectoryPath = config('crudstrap.custom_template')
+        ? config('crudstrap.path') . 'views/' . $stubs . $formHelper . '/'
             : __DIR__ . '/../stubs/views/' . $formHelper . '/';
-
-
         $this->crudName = strtolower($this->argument('name'));
         $this->varName = lcfirst($this->argument('name'));
         $this->crudNameCap = ucwords($this->crudName);
@@ -279,11 +327,11 @@ class CrudViewCommand extends Command
         $this->customData = $this->option('custom-data');
         $this->primaryKey = $this->option('pk');
         $this->routeGroup = ($this->option('route-group'))
-            ? $this->option('route-group') . '/'
+        ? $this->option('route-group') . '/'
             : $this->option('route-group');
         $this->routePrefix = ($this->option('route-group')) ? $this->option('route-group') : '';
         $this->routePrefixCap = ucfirst($this->routePrefix);
-        $this->viewName = Str::snake($this->argument('name'), '-');
+        $this->viewName = Str::of($this->argument('name'))->snake('-')->ucfirst();
 
         $viewDirectory = config('view.paths')[0] . '/';
         if ($this->option('view-path')) {
@@ -312,18 +360,24 @@ class CrudViewCommand extends Command
             $x = 0;
             foreach ($fieldsArray as $item) {
                 $itemArray = explode('#', $item);
-
+                if (Str::contains($itemArray[1], ':') || Str::contains($itemArray[1], '|')) {
+                    $types = explode('|', str_replace(':', "|", $itemArray[1]));
+                    $type = $types[0];
+                } else {
+                    $type = $itemArray[1];
+                }
                 $this->formFields[$x]['name'] = trim($itemArray[0]);
-                $this->formFields[$x]['type'] = trim($itemArray[1]);
-                $this->formFields[$x]['required'] = preg_match('/' . $itemArray[0] . '/', $validations)? true : false;
+                $this->formFields[$x]['type'] = trim($type);
+                $this->formFields[$x]['required'] = preg_match('/' . $itemArray[0] . '/', $validations) ? true : false;
 
-                if (($this->formFields[$x]['type'] === 'select'
-                    || $this->formFields[$x]['type'] === 'enum')
-                    && isset($itemArray[2])
-                ) {
+                if ($this->formFields[$x]['type'] == 'select' && isset($itemArray[2])) {
                     $options = trim($itemArray[2]);
                     $options = str_replace('options=', '', $options);
-
+                    $this->formFields[$x]['options'] = $options;
+                }
+                if ($this->formFields[$x]['type'] != 'select' &&  isset($itemArray[3]) && Str::startsWith($itemArray[3], 'options')) {
+                    $options = trim($itemArray[3]);
+                    $options = str_replace('options=', '', $options);
                     $this->formFields[$x]['options'] = $options;
                 }
 
@@ -334,29 +388,116 @@ class CrudViewCommand extends Command
         foreach ($this->formFields as $item) {
             $this->formFieldsHtml .= $this->createField($item);
         }
+        $tb = '    ';
 
         $i = 0;
         foreach ($this->formFields as $key => $value) {
-            if ($i == $this->defaultColumnsToShow) {
+            /*if ($i == $this->defaultColumnsToShow) {
                 break;
-            }
+            }*/
 
             $field = $value['name'];
             $label = ucwords(str_replace('_', ' ', $field));
-            if ($this->option('localize') == 'yes') {
-                $label = '{{ trans(\'' . $this->crudName . '.' . $field . '\') }}';
+            if ($this->option('localize')) {
+                $label = '{{ __(\'' . $this->crudName . '.' . $field . '\') }}';
             }
-            $this->formHeadingHtml .= '<th>' . $label . '</th>';
-            $this->formBodyHtml .= '<td>{{ $item->' . $field . ' }}</td>';
+            $this->formHeadingHtml .= $tb . $tb . $tb . $tb . $tb . $tb . '<th>' . $label . '</th>' . PHP_EOL;;
+            // $this->formBodyHtml .=  $tb.$tb.$tb.$tb.$tb.$tb.'<td>{{ %%crudNameSingular%%.'. $field .'}}</td>'.PHP_EOL;;
+            $this->formBodyHtml .= $tb . $tb . $tb . $tb . $tb . '{data: \'' . $field . '\', name:  \'' . $field . '\', orderable: true},' . PHP_EOL;
             $this->formBodyHtmlForShowView .= '<tr><th> ' . $label . ' </th><td> {{ $%%crudNameSingular%%->' . $field . ' }} </td></tr>';
-
+            $this->emptyVueForm .= $tb . $tb . $tb . $tb . $field . ': "",' . PHP_EOL;
+            $this->filledVueForm .= $tb . $tb . $tb . $tb . $field . ':' . $this->crudNameSingular . '.' . $field . ',' . PHP_EOL;
             $i++;
         }
-
+        //dd($this->emptyVueForm ,$this->filledVueForm );
         $this->templateStubs($path);
 
         $this->info('View created successfully.');
     }
+
+
+
+    protected function createFormField($item)
+    {
+        $start = $this->delimiter[0];
+        $end = $this->delimiter[1];
+        $required = $item['required'] ? 'required' : '';
+        $markup = File::get($this->viewDirectoryPath . 'form-fields/form-field.blade.stub');
+        $name = $item['name'];
+        if (isset($item['options'])) { // for relationship selects
+            $markup = File::get($this->viewDirectoryPath . 'form-fields/select-relationship-field.blade.stub');
+            $name = $item['options'];
+        }
+        $markup = str_replace($start . 'required' . $end, $required, $markup);
+        $markup = str_replace($start . 'fieldType' . $end, $this->typeLookup[$item['type']], $markup);
+        $markup = str_replace($start . 'itemName' . $end, $name, $markup);
+        $markup = str_replace($start . 'crudNameSingular' . $end, $this->crudNameSingular, $markup);
+
+        return $this->wrapField(
+            $item,
+            $markup
+        );
+    }
+    protected function wrapField($item, $field)
+    {
+        $formGroup = File::get($this->viewDirectoryPath . 'form-fields/wrap-field.blade.stub');
+
+        $labelText = ucwords(strtolower(str_replace('_', ' ', $item['name'])));
+
+        if ($this->option('localize')) {
+            $labelText = '__(\'' . $this->crudName . '.' . $item['name'] . '\')';
+        }
+
+        return sprintf($formGroup, $item['name'], $labelText, $field);
+    }
+
+    /**
+     * Generate files from stub
+     *
+     * @param $path
+     */
+    protected function templateStubs($path)
+    {
+        $dynamicViewTemplate = config('crudstrap.dynamic_view_template')
+        ? config('crudstrap.dynamic_view_template')
+        : $this->defaultTemplating();
+
+
+
+        foreach ($dynamicViewTemplate as $name => $vars) {
+            $file = $this->viewDirectoryPath . $name . '.blade.stub';
+            $newFile = $path . $name . '.blade.php';
+            $vuefile = $this->viewDirectoryPath . $name . '.vue.stub';
+            $newVueFile = resource_path('js/components/' . ucfirst($this->crudName) . '.vue');
+
+            if (!File::copy($file, $newFile)) {
+                echo "failed to copy $file...\n";
+            } else {
+                $this->templateVars($newFile, $vars);
+                $this->userDefinedVars($newFile);
+            }
+
+            if (File::exists($vuefile) && File::isFile($vuefile)) {
+                if (!File::copy($vuefile, $newVueFile)) {
+                    echo "failed to copy vuejs $file...\n";
+                } else {
+                    $this->templateVars($newVueFile, $vars);
+                    $this->userDefinedVars($newVueFile);
+                }
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * Default template configuration if not provided
@@ -374,28 +515,8 @@ class CrudViewCommand extends Command
         ];
     }
 
-    /**
-     * Generate files from stub
-     *
-     * @param $path
-     */
-    protected function templateStubs($path)
-    {
-        $dynamicViewTemplate = config('crudgenerator.dynamic_view_template')
-            ? config('crudgenerator.dynamic_view_template')
-            : $this->defaultTemplating();
-
-        foreach ($dynamicViewTemplate as $name => $vars) {
-            $file = $this->viewDirectoryPath . $name . '.blade.stub';
-            $newFile = $path . $name . '.blade.php';
-            if (!File::copy($file, $newFile)) {
-                echo "failed to copy $file...\n";
-            } else {
-                $this->templateVars($newFile, $vars);
-                $this->userDefinedVars($newFile);
-            }
-        }
-    }
+   
+    
 
     /**
      * Update specified values between delimiter with real values
@@ -435,26 +556,8 @@ class CrudViewCommand extends Command
         }
     }
 
-    /**
-     * Form field wrapper.
-     *
-     * @param  string $item
-     * @param  string $field
-     *
-     * @return string
-     */
-    protected function wrapField($item, $field)
-    {
-        $formGroup = File::get($this->viewDirectoryPath . 'form-fields/wrap-field.blade.stub');
-
-        $labelText = "'" . ucwords(strtolower(str_replace('_', ' ', $item['name']))) . "'";
-
-        if ($this->option('localize') == 'yes') {
-            $labelText = 'trans(\'' . $this->crudName . '.' . $item['name'] . '\')';
-        }
-
-        return sprintf($formGroup, $item['name'], $labelText, $field);
-    }
+    
+    
 
     /**
      * Form field generator.
@@ -483,32 +586,8 @@ class CrudViewCommand extends Command
         }
     }
 
-    /**
-     * Create a specific field using the form helper.
-     *
-     * @param  array $item
-     *
-     * @return string
-     */
-    protected function createFormField($item)
-    {
-        $start = $this->delimiter[0];
-        $end = $this->delimiter[1];
-
-        $required = $item['required'] ? 'required' : '';
-
-        $markup = File::get($this->viewDirectoryPath . 'form-fields/form-field.blade.stub');
-        $markup = str_replace($start . 'required' . $end, $required, $markup);
-        $markup = str_replace($start . 'fieldType' . $end, $this->typeLookup[$item['type']], $markup);
-        $markup = str_replace($start . 'itemName' . $end, $item['name'], $markup);
-        $markup = str_replace($start . 'crudNameSingular' . $end, $this->crudNameSingular, $markup);
-
-        return $this->wrapField(
-            $item,
-            $markup
-        );
-    }
-
+    
+    
     /**
      * Create a password field using the form helper.
      *

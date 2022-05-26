@@ -1,0 +1,26 @@
+<?php
+/**Envatic Crypto APP
+* Adapted by
+ *Stephen Isaac:  ofuzak@gmail.com>.
+ *Skype: ofuzak
+ *www.evatic.com (Deploy Scripts , Apps , coins in One click)
+ */
+namespace DummyRootNamespace\Transformers;
+
+use League\Fractal\TransformerAbstract;
+use DummyRootNamespace{{modelNamespace}}{{modelName}};
+
+class DummyClass extends TransformerAbstract
+{
+    
+	{{availableIncludes}};
+
+    public function transform({{modelName}} ${{modelNameVariable}})
+    {
+        return {{transformArray}};
+    }
+
+	{{relationshipFunctions}}
+
+}
+

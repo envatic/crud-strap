@@ -1,6 +1,6 @@
 <?php
 
-namespace Appzcoder\CrudGenerator\Commands;
+namespace Envatic\CrudStrap\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Str;
@@ -43,8 +43,8 @@ class CrudApiControllerCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return config('crudgenerator.custom_template')
-        ? config('crudgenerator.path') . '/api-controller.stub'
+        return config('crudstrap.custom_template')
+        ? config('crudstrap.path') . '/api-controller.stub'
         : __DIR__ . '/../stubs/api-controller.stub';
     }
 

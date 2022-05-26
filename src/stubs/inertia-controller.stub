@@ -1,0 +1,109 @@
+<?php
+namespace DummyNamespace;
+use Inertia\Inertia;
+use DummyRootNamespaceHttp\Controllers\Controller;
+use DummyRootNamespace{{modelNamespace}}{{modelName}};
+use DummyRootNamespaceHttp\Resources\{{modelName}} as {{modelName}}Resource ;
+{{useItems}}
+use Illuminate\Http\Request;
+
+class DummyClass extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     * @return \Illuminate\View\View
+     */
+    public function index(Request $request)
+    {
+        $keyword = $request->get('search');
+        $perPage = {{pagination}};
+        if (!empty($keyword)) {
+            ${{crudName}}Items  = {{modelName}}::{{whereSnippet}}latest()->paginate($perPage);
+        } else {
+            ${{crudName}}Items = {{modelName}}::{{relationsList}}latest()->paginate($perPage);
+        }
+        ${{crudName}} = {{modelName}}Resource::collection(${{crudName}}Items);
+        {{relatedModels}}
+        return Inertia::render('{{viewPath}}{{viewName}}/List', compact('{{crudName}}'{{relatedModelsItems}}));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     * @return \Illuminate\View\View
+     */
+    public function create()
+    {
+        {{relatedModels}}
+        return Inertia::render('{{viewPath}}{{viewName}}/Create', compact('{{crudName}}'{{relatedModelsItems}}));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function store(Request $request)
+    {
+        {{validationRules}}
+        {{fileSnippet}}
+        ${{crudNameSingular}} = new {{modelName}};
+        {{saveable}}
+        return redirect('{{routePrefix}}.{{crudName}}.index')->with('success', '{{modelName}} added!');
+    }
+
+    /**
+     * Display the specified resource.
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function show($id)
+    {
+        ${{crudNameSingular}} = {{modelName}}::{{relationsList}}findOrFail($id);
+        ${{crudNameSingular}}Resource = new {{modelName}}Resource(${{crudNameSingular}});
+        return Inertia::render('{{viewPath}}{{viewName}}/Show', compact('{{crudNameSingular}}Resource'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function edit($id)
+    {
+        ${{crudNameSingular}} = {{modelName}}::findOrFail($id);
+        {{relatedModels}}
+        ${{crudNameSingular}}Resource = new {{modelName}}Resource(${{crudNameSingular}});
+        return Inertia::render('{{viewPath}}{{viewName}}/Edit', compact('{{crudNameSingular}}Resource'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param  int  $id
+     *
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function update(Request $request, $id)
+    {
+        {{validationRules}}
+        $requestData = $request->all();
+        {{fileSnippet}}
+        ${{crudNameSingular}} = {{modelName}}::findOrFail($id);
+        {{saveable}}
+        return back()->with('success', '{{modelName}} updated!');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     *
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function destroy($id)
+    {
+        {{modelName}}::destroy($id);
+        return redirect('{{routePrefix}}.{{crudName}}.index')->with('success', '{{modelName}} deleted!');
+    }
+}

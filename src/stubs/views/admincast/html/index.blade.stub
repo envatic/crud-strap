@@ -1,0 +1,98 @@
+@extends('layouts.admin')
+@section('title')
+%%modelName%%s
+@endsection
+@section('content')
+<div class="content-wrapper"> 
+	<!-- Content Header (Page header) -->
+	<div class="page-heading">
+		<h1 class="page-title">Manage %%modelName%%s</h1>
+	</div>
+	
+	<!-- Main content -->
+	<div class="page-content fade-in-up">
+		<div class="row">
+			<div class="col-sm-12">
+				<div class="card">
+					<div class="card-header p-2">
+						<h3 class="card-title"> Manage %%modelName%%s</h3>
+					</div>
+					<!-- /.card-header -->
+					<div class="card-body"> <a href="{{ route('admin.%%crudName%%.create') }}" class="btn btn-success btn-sm" title="__('Add New') %%modelName%%"> <i class="fa fa-plus" aria-hidden="true"></i> Add New </a> <a data-table="%%modelName%%"  href="{{ route('admin.%%crudName%%.masstoggle') }}" data-ids="[]" class="btn btn-info btn-sm mass ajax_link refresh confirm" data-confirm="Are You Sure You want To Activate Selected Items?" data-status="1" title="{{__('Enable')}} %%modelName%%s"> {{__('Enable')}} : <span class="count">0</span> {{__('Selected')}} </a> <a data-table="%%modelName%%" href="{{ route('admin.%%crudName%%.masstoggle') }}" data-ids="[]" class="btn btn-info btn-sm mass ajax_link refresh confirm" data-confirm="Are You Sure You want To Deactive Selected Items?"  data-status="0" title=" {{__('Disable')}} %%modelName%%s"> {{__('Disable')}} : <span class="count">0</span> {{__('selected')}} </a> <a data-table="%%modelName%%"   href="{{ route('admin.%%crudName%%.massdelete') }}" data-ids="[]" class="btn btn-danger btn-sm ajax_link mass refresh confirm" data-confirm="Are You Sure You want To Delete Selected Items? This Action is Irreversible" title="{{__('Delete')}} %%modelName%%s"> {{__('Delete')}} : <span class="count">0</span> {{__('Selected')}} </a> <a   href="javascript:;" class="btn btn-default btn-sm clear" title="Clear Selection %%modelName%%s"> {{__('Reset')}} : <span class="count">0</span> {{__('Selected')}} </a>
+						<hr>
+						<table id="%%modelName%%" class="table table-bordered table-hover">
+							<thead>
+								<tr>
+									<th >#</th>
+									%%formHeadingHtml%%
+									<th>{!! __("Actions")  !!}</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>
+						</table>
+					</div>
+					<!-- /.row --> 
+				</div>
+				<!-- /.container-fluid --> 
+				<!-- /.content --> 
+			</div>
+		</div>
+	</div>
+</div>
+@endsection
+
+
+@push('js')
+    <script>
+        $(function() {
+			var selected = [];
+          	window.%%modelName%% = $('#%%modelName%%').dataTable({
+                "order": [[0, 'asc' ]],
+                processing: true,
+				responsive: true,
+                serverSide: true,
+                "autoWidth": false,
+				"rowCallback": function( row, data ) {
+					if ( $.inArray(data.DT_RowId, selected) !== -1 ) {
+						$(row).addClass('info');
+						$(row).find('input.chkbx').prop('checked', true);
+					}
+				},
+			    "ajax": {
+					"url": "{{route('admin.%%crudName%%.table')}}",
+					"type": "POST",
+					'headers': { 'X-CSRF-TOKEN': '{{ csrf_token() }}'}
+				},
+				type:'POST',
+                columns: [
+%%formBodyHtml%%					{data: 'actions', name: 'actions'},
+                  
+                ]
+            });
+			$('#%%modelName%% tbody').on('click', 'input', function () {
+				var tr = $(this).parents('tr')
+				var id = tr.attr('id');
+				
+				var index = $.inArray(id, selected);
+				if ( index === -1 ) {
+					selected.push( id );
+				} else {
+					selected.splice( index, 1 );
+				}
+				
+				$(tr).toggleClass('info');
+				$('a.btn.mass').data('ids',selected);
+				$('.count').text(selected.length);
+			} );
+			
+			$('a.btn.clear').click(function(e) {
+				selected =[];
+				$('.count').text(0);
+				$('a.btn.mass').data('ids',[]);
+				$('.chkbx').prop('checked', false);
+				$('tr.info','#%%modelName%% tbody').removeClass('info');
+			});
+        });
+    </script>
+@endpush

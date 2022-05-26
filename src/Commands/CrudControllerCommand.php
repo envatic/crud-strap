@@ -1,6 +1,6 @@
 <?php
 
-namespace Appzcoder\CrudGenerator\Commands;
+namespace Envatic\CrudStrap\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Str;
@@ -20,10 +20,13 @@ class CrudControllerCommand extends GeneratorCommand
                             {--controller-namespace= : Namespace of the controller.}
                             {--view-path= : The name of the view path.}
                             {--fields= : Field names for the form & migration.}
+                            {--relationships= : RelationShips to Load Releated Models}
                             {--validations= : Validation rules for the fields.}
                             {--route-group= : Prefix of the route group.}
                             {--pagination=25 : The amount of models per page for index pages.}
-                            {--force : Overwrite already existing controller.}';
+                            {--force : Overwrite already existing controller.}
+							{--api : use api controller.}
+							{--inertia : use inertia controller.}';
 
     /**
      * The console command description.
@@ -46,11 +49,70 @@ class CrudControllerCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return config('crudgenerator.custom_template')
-        ? config('crudgenerator.path') . '/controller.stub'
+        $api = $this->option('api');
+        $inertia = $this->option('inertia');
+        if (!$api && !$inertia) return $this->getNormalStub();
+        $stub = $inertia ? 'inertia' : 'api';
+        return config('crudstrap.custom_template')
+        ? config('crudstrap.path') . '/' . $stub . '-controller.stub'
+        : __DIR__ . '/../stubs/' . $stub . '-controller.stub';
+    }
+
+    /**
+     * Get the stub file for the generator.
+     *
+     * @return string
+     */
+    protected function getNormalStub()
+    {
+        return config('crudstrap.custom_template')
+        ? config('crudstrap.path') . '/controller.stub'
         : __DIR__ . '/../stubs/controller.stub';
     }
 
+    /**
+     * Replace the javascript validationRules for the given stub.
+     *
+     * @param  string  $stub
+     * @param  string  $validationRules
+     *
+     * @return $this
+     */
+    protected function replaceJSValidation(&$stub, $jsvalidation)
+    {
+        $stub = str_replace('{{jsvalidator}}', $jsvalidation, $stub);
+        return $this;
+    }
+
+    protected function replaceSaveable(&$stub, $saveable)
+    {
+        $stub = str_replace('{{saveable}}', $saveable, $stub);
+        return $this;
+    }
+
+
+    protected function replaceRelatedModels(&$stub, $relatedModels, $relatedModelsItems)
+    {
+        $stub = str_replace(['{{relatedModels}}', '{{relatedModelsItems}}'], [$relatedModels, $relatedModelsItems], $stub);
+        return $this;
+    }
+
+
+    protected function replaceCrudNameCaps(&$stub, $crudNameCaps)
+    {
+        $stub = str_replace('{{crudNameCaps}}', $crudNameCaps, $stub);
+        return $this;
+    }
+    protected function replaceUseItems(&$stub, $useItems)
+    {
+        $stub = str_replace('{{useItems}}', $useItems, $stub);
+        return $this;
+    }
+    protected function replaceRelationsList(&$stub, $relationsList)
+    {
+        $stub = str_replace('{{relationsList}}', $relationsList, $stub);
+        return $this;
+    }
     /**
      * Get the default namespace for the class.
      *
@@ -76,57 +138,75 @@ class CrudControllerCommand extends GeneratorCommand
         }
         return parent::alreadyExists($rawName);
     }
-
-    /**
-     * Build the model class with the given name.
-     *
-     * @param  string  $name
-     *
-     * @return string
-     */
     protected function buildClass($name)
     {
+        $cname = Str::of($this->option('crud-name'));
         $stub = $this->files->get($this->getStub());
-
-        $viewPath = $this->option('view-path') ? $this->option('view-path') . '.' : '';
-        $crudName = strtolower($this->option('crud-name'));
-        $crudNameSingular = Str::singular($crudName);
+        $view = $this->option('view-path');
+        $crudName = $cname->lower();
+        $crudNameCaps = $cname->lower()->ucfirst();
+        $crudNameSingular = $crudName->singular();
         $modelName = $this->option('model-name');
+        $relationships = $this->option('relationships');
         $modelNamespace = $this->option('model-namespace');
+        $modelNamespaced = $this->option('model-namespace');
         $routeGroup = ($this->option('route-group')) ? $this->option('route-group') . '/' : '';
         $routePrefix = ($this->option('route-group')) ? $this->option('route-group') : '';
         $routePrefixCap = ucfirst($routePrefix);
         $perPage = intval($this->option('pagination'));
-        $viewName = Str::snake($this->option('crud-name'), '-');
+        $viewName = $cname->snake('-')->ucfirst();
+        $routeViewName = $viewName->lower();
         $fields = $this->option('fields');
         $validations = rtrim($this->option('validations'), ';');
-
+        $viewPath = $view ? Str::of($view)->ucfirst() . "/" : "";
         $validationRules = '';
+        $jsvalidation = '';
+        $relationsListItems = '';
+        $relationsList = '';
+        $saveable = '';
+        $useItems = "";
+        if (trim($relationships)) {
+            $relations = explode(';', $relationships);
+            foreach ($relations as $r) {
+                if (trim($r) == '') continue;
+                $parts = explode('#', $r);
+                $xname = trim($parts[0]);
+                $relationsListItems .= ",'{$xname}'";
+            }
+            $relationsListItems = trim($relationsListItems, ',');
+        }
+
+        if ($relationsListItems != '') {
+            $relationsList = "with([{$relationsListItems}])->";
+        }
         if (trim($validations) != '') {
-            $validationRules = "\$this->validate(\$request, [";
-
+            $validationRules = "\$request->validate([";
             $rules = explode(';', $validations);
+            $xrules = '';
             foreach ($rules as $v) {
-                if (trim($v) == '') {
-                    continue;
-                }
-
+                if (trim($v) == '') continue;
                 // extract field name and args
                 $parts = explode('#', $v);
                 $fieldName = trim($parts[0]);
                 $rules = trim($parts[1]);
-                $validationRules .= "\n\t\t\t'$fieldName' => '$rules',";
+                $xrules .= "\n\t\t\t'$fieldName' => '$rules',";
+                $saveable .= "\n\t\t$" . "{$crudNameSingular}->{$fieldName} = \$request->{$fieldName};";
             }
-
-            $validationRules = substr($validationRules, 0, -1); // lose the last comma
+            $validationRules .= substr($xrules, 0, -1); // lose the last comma
             $validationRules .= "\n\t\t]);";
+            $jsvalidation    = "\$jsvalidator = JsValidator::make([";
+            $jsvalidation .= substr($xrules, 0, -1); // lose the last comma again
+            $jsvalidation .= "\n\t\t]);";
+            $saveable .= "\n\t\t$" . $crudNameSingular . "->save();";
         }
+
+
 
         if (\App::VERSION() < '5.3') {
             $snippet = <<<EOD
         if (\$request->hasFile('{{fieldName}}')) {
             \$file = \$request->file('{{fieldName}}');
-            \$fileName = str_random(40) . '.' . \$file->getClientOriginalExtension();
+            \$fileName = Str::random(40) . '.' . \$file->getClientOriginalExtension();
             \$destinationPath = storage_path('/app/public/uploads');
             \$file->move(\$destinationPath, \$fileName);
             \$requestData['{{fieldName}}'] = 'uploads/' . \$fileName;
@@ -145,29 +225,43 @@ EOD;
         $fieldsArray = explode(';', $fields);
         $fileSnippet = '';
         $whereSnippet = '';
-
+        $relatedModels = "";
+        $relatedModelsItems = "";
         if ($fields) {
             $x = 0;
             foreach ($fieldsArray as $index => $item) {
                 $itemArray = explode('#', $item);
-
-                if (trim($itemArray[1]) == 'file') {
-                    $fileSnippet .= str_replace('{{fieldName}}', trim($itemArray[0]), $snippet) . "\n";
+                // some fields are just for db only eg rememberToken
+                if (empty($itemArray[0])) continue;
+                // remove migration modifiers string:16|nullable , 
+                if (Str::contains($itemArray[1], ':') || Str::contains($itemArray[1], '|')) {
+                    $types = explode('|', str_replace(':', "|", $itemArray[1]));
+                    $type = $types[0];
+                } else {
+                    $type = $itemArray[1];
                 }
 
+                if ((trim($type) != 'select' || trim($type) != 'enum') &&  trim($type) == 'foreignId' && isset($itemArray[2])) {
+                    $relmod = Str::of(str_replace("options=", "", $itemArray[2]))->ucfirst();
+                    $useItems .= "\nuse App\\{$modelNamespaced}{$relmod};";
+                    $useItems .= "\nuse App\\Http\\Resources\\{$relmod} as {$relmod}Resource;";
+                    $relatedModels .= "\${$relmod->lower()}s = {$relmod}Resource::collection($relmod::all());";
+                    $relatedModelsItems .= ",'{$relmod->lower()}s'";
+                }
+                if (trim($type) == 'file') {
+                    $fileSnippet .= str_replace('{{fieldName}}', trim($itemArray[0]), $snippet) . "\n";
+                }
                 $fieldName = trim($itemArray[0]);
-
                 $whereSnippet .= ($index == 0) ? "where('$fieldName', 'LIKE', \"%\$keyword%\")" . "\n                " : "->orWhere('$fieldName', 'LIKE', \"%\$keyword%\")" . "\n                ";
             }
-
             $whereSnippet .= "->";
         }
-
         return $this->replaceNamespace($stub, $name)
             ->replaceViewPath($stub, $viewPath)
             ->replaceViewName($stub, $viewName)
             ->replaceCrudName($stub, $crudName)
             ->replaceCrudNameSingular($stub, $crudNameSingular)
+            ->replaceCrudNameCaps($stub, $crudNameCaps)
             ->replaceModelName($stub, $modelName)
             ->replaceModelNamespace($stub, $modelNamespace)
             ->replaceModelNamespaceSegments($stub, $modelNamespace)
@@ -175,11 +269,17 @@ EOD;
             ->replaceRoutePrefix($stub, $routePrefix)
             ->replaceRoutePrefixCap($stub, $routePrefixCap)
             ->replaceValidationRules($stub, $validationRules)
+            ->replaceJSValidation($stub, $jsvalidation)
+            ->replaceRelatedModels($stub, $relatedModels, $relatedModelsItems)
             ->replacePaginationNumber($stub, $perPage)
             ->replaceFileSnippet($stub, $fileSnippet)
             ->replaceWhereSnippet($stub, $whereSnippet)
+            ->replaceSaveable($stub, ltrim($saveable, "\n"))
+            ->replaceRelationsList($stub, $relationsList)
+            ->replaceUseItems($stub, $useItems)
             ->replaceClass($stub, $name);
     }
+
 
     /**
      * Replace the viewName fo the given stub.

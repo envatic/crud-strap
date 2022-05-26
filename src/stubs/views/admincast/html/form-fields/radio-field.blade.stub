@@ -1,0 +1,8 @@
+		<div class="row">
+			<div class="col-md-2">
+				<label class="ui-radio"><input name="%%itemName%%" type="radio" value="1" {{ (isset($%%crudNameSingular%%) && 1 == $%%crudNameSingular%%->%%itemName%%) ? 'checked' : '' }}><span class="input-span"></span> Yes</label>
+			</div>
+			<div class="col-md-2">
+				<label class="ui-radio"><input name="%%itemName%%" type="radio" value="0" @if (isset($%%crudNameSingular%%)) {{ (0 == $%%crudNameSingular%%->%%itemName%%) ? 'checked' : '' }} @else {{ 'checked' }} @endif><span class="input-span"></span> No</label>
+			</div>
+		</div>

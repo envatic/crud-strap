@@ -1,0 +1,82 @@
+<?php
+/** dev:
+    *Stephen Isaac:  ofuzak@gmail.com.
+    *Skype: ofuzak
+ */
+namespace DummyNamespace;
+use NamespacedDummyModel;
+use App\Activity;
+class DummyClass
+{
+    /**
+     * Handle the DocDummyModel "created" event.
+     *
+     * @param  \NamespacedDummyModel  $dummyModel
+     * @return void
+     */
+    public function created(DummyModel $dummyModel)
+    {
+        //
+		Activity::create([
+			'description'=>__('app.created').' '.__('app.new').' DummyModel '
+		]);
+    }
+
+    /**
+     * Handle the DocDummyModel "updated" event.
+     *
+     * @param  \NamespacedDummyModel  $dummyModel
+     * @return void
+     */
+    public function updated(DummyModel $dummyModel)
+    {
+        //
+		Activity::create([
+			'description'=>__('app.updated').'  DummyModel : #'.$dummyModel->id
+		]);
+    }
+
+    /**
+     * Handle the DocDummyModel "deleted" event.
+     *
+     * @param  \NamespacedDummyModel  $dummyModel
+     * @return void
+     */
+    public function deleted(DummyModel $dummyModel)
+    {
+        //
+		Activity::create([
+			'description'=>__('app.deleted').'  DummyModel : #'.$dummyModel->id
+		]);
+    }
+
+    /**
+     * Handle the DocDummyModel "restored" event.
+     *
+     * @param  \NamespacedDummyModel  $dummyModel
+     * @return void
+     */
+    public function restored(DummyModel $dummyModel)
+    {
+        //
+		Activity::create([
+			'description'=>__('app.restored').'  DummyModel : #'.$dummyModel->id
+		]);
+		
+    }
+
+    /**
+     * Handle the DocDummyModel "force deleted" event.
+     *
+     * @param  \NamespacedDummyModel  $dummyModel
+     * @return void
+     */
+    public function forceDeleted(DummyModel $dummyModel)
+    {
+        //
+		Activity::create([
+			'description'=>__('app.permanently').' '.__('app.deleted').'  DummyModel : #'.$dummyModel->id
+		]);
+		
+    }
+}

@@ -1,0 +1,42 @@
+@extends('layouts.admin')
+@section('title')
+Edit %%modelName%% #{{ $%%crudNameSingular%%->%%primaryKey%% }}
+@endsection
+@section('content')
+<div class="content-wrapper"> 
+	<!-- Content Header (Page header) -->
+	<div class="page-heading">
+		<h1 class="page-title">Edit %%modelName%% #{{ $%%crudNameSingular%%->%%primaryKey%% }}</h1>
+	</div>
+	<!-- Main content -->
+	<div class="page-content fade-in-up">
+		<div class="row">
+			<div class="col-sm-12">
+				<div class="card">
+					<div class="card-header p-2">
+						<h3 class="card-title"><a href="{{ route('admin.%%crudName%%.index') }}" title="Back">
+							<button class="btn btn-warning btn-sm mr-3"><i class="fa fa-arrow-left" aria-hidden="true"></i> Back</button>
+							</a> %%modelName%% #{{ $%%crudNameSingular%%->%%primaryKey%% }}</h3>
+					</div>
+					<!-- /.card-header -->
+					<div class="card-body"> @if ($errors->any())
+						<ul class="alert alert-danger list-unstyled">
+							@foreach ($errors->all() as $error)
+							<li>{{ $error }}</li>
+							@endforeach
+						</ul>
+						@endif
+						<form method="POST" action="{{ route('admin.%%crudName%%.update', $%%crudNameSingular%%->%%primaryKey%%) }}" data-edit="true" accept-charset="UTF-8" class="form-horizontal ajax_form edit" enctype="multipart/form-data">
+							@method('PATCH')
+							@csrf
+							@include ('%%viewTemplateDir%%.form', ['submitButtonText' => 'Update %%modelName%%'])
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- /.row --> 
+	</div>
+	<!-- /.content --> 
+</div>
+@endsection 

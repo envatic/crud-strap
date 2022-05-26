@@ -1,12 +1,18 @@
 <?php
-
+/** dev:
+    *Stephen Isaac:  ofuzak@gmail.com.
+    *Skype: ofuzak
+ */
 namespace DummyNamespace;
 
 use Illuminate\Database\Eloquent\Model;
 {{useSoftDeletes}}
+{{use}}
 class DummyClass extends Model
 {
-    {{softDeletes}}/**
+    {{softDeletes}}
+    {{useTrait}}
+	/**
      * The database table used by the model.
      *
      * @var string
@@ -14,6 +20,13 @@ class DummyClass extends Model
     protected $table = '{{table}}';
 
     {{primaryKey}}
+	
+	/**
+     * Attributes that should be cast to native types.
+     *
+     * @var string
+     */
+    {{casts}}
 
     /**
      * Attributes that should be mass-assignable.

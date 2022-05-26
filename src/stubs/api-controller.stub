@@ -1,14 +1,17 @@
 <?php
+/** dev: Stephen Isaac:  ofuzak@gmail.com>.
+ *Skype: ofuzak
+ */
 
 namespace DummyNamespace;
 
 use DummyRootNamespaceHttp\Requests;
-use DummyRootNamespaceHttp\Controllers\Controller;
-
+use DummyRootNamespaceHttp\Controllers\AjaxController;
+use App\Http\Resources\{{modelName}} as {{modelName}}Resource;
 use DummyRootNamespace{{modelNamespace}}{{modelName}};
 use Illuminate\Http\Request;
 
-class DummyClass extends Controller
+class DummyClass extends AjaxController
 {
     /**
      * Display a listing of the resource.
@@ -17,9 +20,8 @@ class DummyClass extends Controller
      */
     public function index(Request $request)
     {
-        ${{crudName}} = {{modelName}}::latest()->paginate({{pagination}});
-
-        return ${{crudName}};
+        ${{crudName}} = {{modelName}}::latest()->get();
+		return {{modelName}}Resource::collection(${{crudName}});
     }
 
     /**
@@ -31,24 +33,11 @@ class DummyClass extends Controller
      */
     public function store(Request $request)
     {
+		$this->authorize('create', {{modelName}}::class);
         {{validationRules}}
         ${{crudNameSingular}} = {{modelName}}::create($request->all());
-
-        return response()->json(${{crudNameSingular}}, 201);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        ${{crudNameSingular}} = {{modelName}}::findOrFail($id);
-
-        return ${{crudNameSingular}};
+		{{fileSnippet}}
+		return $this->index( $request);
     }
 
     /**
@@ -61,11 +50,13 @@ class DummyClass extends Controller
      */
     public function update(Request $request, $id)
     {
+		${{crudNameSingular}} = {{modelName}}::find($id);
+		$this->authorize('update', ${{crudNameSingular}});
         {{validationRules}}
-        ${{crudNameSingular}} = {{modelName}}::findOrFail($id);
-        ${{crudNameSingular}}->update($request->all());
-
-        return response()->json(${{crudNameSingular}}, 200);
+        $requestData = $request->all();
+        {{fileSnippet}}
+        ${{crudNameSingular}}->update($requestData);
+		return $this->index( $request);
     }
 
     /**
@@ -75,10 +66,11 @@ class DummyClass extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+		${{crudNameSingular}} = {{modelName}}::find($id);
+		$this->authorize('delete', ${{crudNameSingular}});
         {{modelName}}::destroy($id);
-
-        return response()->json(null, 204);
-    }
+        return $this->index($request);
+    }	
 }

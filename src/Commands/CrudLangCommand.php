@@ -1,8 +1,8 @@
 <?php
 
-namespace Appzcoder\CrudGenerator\Commands;
+namespace Envatic\CrudStrap\Commands;
 
-use File;
+use Illuminate\Support\Facades\File;
 use Illuminate\Console\Command;
 
 class CrudLangCommand extends Command
@@ -12,9 +12,10 @@ class CrudLangCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'crud:lang
+    protected $signature = 'crud:jlang
                             {name : The name of the Crud.}
                             {--fields= : The field names for the form.}
+                            {--f|force : Force delete.}
                             {--locales=en : The locale for the file.}';
 
     /**
@@ -54,9 +55,9 @@ class CrudLangCommand extends Command
     {
         parent::__construct();
 
-        $this->viewDirectoryPath = config('crudgenerator.custom_template')
-        ? config('crudgenerator.path')
-        : __DIR__ . '/../stubs/';
+        $this->viewDirectoryPath = config('crudstrap.custom_template')
+            ? config('crudstrap.path')
+            : __DIR__ . '/../stubs/';
     }
 
     /**
@@ -120,7 +121,7 @@ class CrudLangCommand extends Command
             $text = ucwords(strtolower(str_replace('_', ' ', $index)));
             $messages[] = "'$index' => '$text'";
         }
-
-        File::put($newLangFile, str_replace('%%messages%%', implode(",\n", $messages), File::get($newLangFile)));
+        $tabIndent = '    ';
+        File::put($newLangFile, str_replace('%%messages%%', implode(",\n" . $tabIndent, $messages), File::get($newLangFile)));
     }
 }

@@ -5,16 +5,16 @@ abstract class TestCase extends Orchestra\Testbench\TestCase
 
     protected function getPackageProviders($app)
     {
-        return [\Appzcoder\CrudGenerator\CrudGeneratorServiceProvider::class];
+        return [\Envatic\CrudStrap\CrudStrapServiceProvider::class];
     }
 
     protected function getEnvironmentSetUp($app)
     {
         $app['config']->set('view.paths', [__DIR__ . '/temp/views']);
 
-        $app['config']->set('crudgenerator', [
+        $app['config']->set('crudstrap', [
             'custom_template' => false,
-            'path' => base_path('resources/crud-generator/'),
+            'path' => base_path('resources/crud-strap/'),
             'view_columns_number' => 3,
             'dynamic_view_template' => [
                 'index' => ['formHeadingHtml', 'formBodyHtml', 'crudName', 'crudNameCap', 'modelName', 'viewName', 'routeGroup', 'primaryKey'],

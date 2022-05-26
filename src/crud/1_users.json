@@ -1,0 +1,35 @@
+{
+	"fields": [
+		
+		{
+			"name": "name",
+			"type": "string",
+			"rules": "required|string"
+		},
+		{
+			"name": "email",
+			"type": "timestamp|nullable",
+            "rules": "required|string|unique"
+		},
+        {
+            "name": "email_verified_at",
+            "type": "string|nullable"
+        }, {
+            "name": "password",
+            "type": "string",
+            "rules": "required|string"
+        },
+        {
+            "type": "rememberToken"
+        },
+        {
+            "name": "current_team_id",
+            "type": "foreignId"
+        },
+        {
+            "name": "profile_photo_path",
+            "type": "string|nullable"
+        }
+	]
+
+}
