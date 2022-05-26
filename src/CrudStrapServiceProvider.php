@@ -37,7 +37,7 @@ class CrudStrapServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-            __DIR__ . '/../config/crudstrap;' => config_path('crudstrap;'),
+            __DIR__ . '/../config/crudgenerator.php' => config_path('crudgenerator.php'),
         ]);
 
         $this->publishes([
