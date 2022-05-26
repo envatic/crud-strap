@@ -31,6 +31,9 @@ class CrudStrapServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/stubs/' => base_path('resources/crud-strap/'),
         ]);
+        $this->publishes([
+            __DIR__ . '/crud/' => base_path('crud'),
+        ]);
     }
 
     /**
