@@ -1,6 +1,6 @@
 <?php
 
-namespace Envtatic\CrudStrap\Commands;
+namespace Envatic\CrudStrap\Commands;
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;

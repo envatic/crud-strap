@@ -2,7 +2,23 @@
 
 namespace Envatic\CrudStrap;
 
+use Envatic\CrudStrap\Commands\CrudApiCommand;
+use Envatic\CrudStrap\Commands\CrudApiControllerCommand;
+use Envatic\CrudStrap\Commands\CrudCommand;
+use Envatic\CrudStrap\Commands\CrudControllerCommand;
+use Envatic\CrudStrap\Commands\CrudDbFactoryCommand;
+use Envatic\CrudStrap\Commands\CrudEnumCommand;
+use Envatic\CrudStrap\Commands\CrudLangCommand;
+use Envatic\CrudStrap\Commands\CrudMigrationCommand;
+use Envatic\CrudStrap\Commands\CrudModelCommand;
+use Envatic\CrudStrap\Commands\CrudObserverCommand;
+use Envatic\CrudStrap\Commands\CrudPolicyCommand;
+use Envatic\CrudStrap\Commands\CrudResourceCommand;
+use Envatic\CrudStrap\Commands\CrudStrap;
+use Envatic\CrudStrap\Commands\CrudTransformerCommand;
+use Envatic\CrudStrap\Commands\CrudViewCommand;
 use Illuminate\Support\ServiceProvider;
+
 
 class CrudStrapServiceProvider extends ServiceProvider
 {
@@ -21,7 +37,7 @@ class CrudStrapServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-            __DIR__ . '/../config/crudstrap.php' => config_path('crudstrap.php'),
+            __DIR__ . '/../config/crudstrap;' => config_path('crudstrap;'),
         ]);
 
         $this->publishes([
@@ -44,14 +60,21 @@ class CrudStrapServiceProvider extends ServiceProvider
     public function register()
     {
         $this->commands(
-            'Envatic\CrudStrap\Commands\CrudCommand',
-            'Envatic\CrudStrap\Commands\CrudControllerCommand',
-            'Envatic\CrudStrap\Commands\CrudModelCommand',
-            'Envatic\CrudStrap\Commands\CrudMigrationCommand',
-            'Envatic\CrudStrap\Commands\CrudViewCommand',
-            'Envatic\CrudStrap\Commands\CrudLangCommand',
-            'Envatic\CrudStrap\Commands\CrudApiCommand',
-            'Envatic\CrudStrap\Commands\CrudApiControllerCommand'
+            CrudApiCommand::class,
+            CrudApiControllerCommand::class,
+            CrudCommand::class,
+            CrudControllerCommand::class,
+            CrudDbFactoryCommand::class,
+            CrudEnumCommand::class,
+            CrudLangCommand::class,
+            CrudMigrationCommand::class,
+            CrudModelCommand::class,
+            CrudObserverCommand::class,
+            CrudPolicyCommand::class,
+            CrudResourceCommand::class,
+            CrudStrap::class,
+            CrudTransformerCommand::class,
+            CrudViewCommand::class,
         );
     }
 }
