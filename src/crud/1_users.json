@@ -1,4 +1,19 @@
 {
+    "config": {
+         "name": "default",
+         "folder": "crud/",
+         "form-helper": "html",
+         "model-namespace": "Models",
+         "soft-deletes": true,
+         "controller-namespace":null,
+         "pk": "id",
+         "pagination": 25,
+         "route-group": null,
+         "force": false,
+         "inertia": false,
+         "locales": "en",
+         "only": "all"
+    },
 	"fields": [
 		
 		{

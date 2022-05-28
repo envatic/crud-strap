@@ -2,8 +2,9 @@
 
 This documentation will guide you to generate your stuffs for your application. Let's begin!
 
-## Getting Started
 
+## Getting Started
+0. [Overview](overview.md)
 1. [Installation](installation.md)
 2. [Configuration](configuration.md)
 3. [Usage](usage.md)

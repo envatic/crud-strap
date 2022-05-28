@@ -502,6 +502,7 @@ class CrudCommand extends Command
         if (!isset($fields->relationships)) {
             return '';
         }
+        
         $relationsString = '';
         foreach ($fields->relationships as $relation) {
             $class = $relation->class ?? "";

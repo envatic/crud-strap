@@ -23,7 +23,18 @@ return [
     |
      */
 
-    'user_teams_model' => true,
+    'user_teams_model' => true, /*
+    |--------------------------------------------------------------------------
+    | overide how database field are converted to form fields
+    |--------------------------------------------------------------------------
+    |
+    | Here you can create A Teams Compartible Model.
+    |
+     */
+
+    'type_lookup' => [
+        'uuid' => 'uuid',
+    ],
 
     /**
      * Columns number to show in view's table.
@@ -129,26 +140,7 @@ return [
 
     ],
 
-
     // add your pivote table here in order to create only miration
     'pivot_tables' => [],
-
-    
-    //use these to skip generating certian items
-    // eg the models Team and User will NOT be geenerated in any theme above
-    'skip' => [
-        'model' => 'teams,user', // dont create teams and user model
-        'controller' => 'user,', // dont create user controller
-        'migration' => 'teams,user',  // dont create user migration
-        'resource' => null,
-        'policy' => null,
-        'transformer' => null,
-        'view' => null,
-        'route' => null,
-        'factory' => null,
-        'lang' => null,
-        'enums' => null
-    ]
-
 
 ];

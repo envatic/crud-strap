@@ -75,14 +75,20 @@ class CrudStrap extends Command
         );
         $secs = now()->diffInSeconds(\Carbon\Carbon::today());
         foreach ($files as $file) {
+            $fileData = $file->openFile();
+            $data = json_decode($fileData->fread($fileData->getSize()), true);
+            $config = $data['config'] ?? [];
             $themex = $theme;
-            $only =  Str::of($themex['--only'])->replace(' ', '');
             if ($file->getExtension() != 'json') continue;
             $ext = explode('.', $file->getFilename());
             $nameStr = preg_replace('/[(0-9)]+_/', '', array_shift($ext));
             if (in_array($nameStr, config('crudstrap.pivot_tables'))) {
                 $themex['--only'] = 'migration';
             }
+            //overide with json config
+            $themex = collect($themex)
+                ->merge(collect($config)->mapWithKeys(fn ($v, $k) => ["--$k" => $v]))
+                ->all();
             $name = Str::of($nameStr)->plural()->ucfirst();
             if (empty($name)) continue;
             $themex['--fields_from_file'] = $folder . "/" . $file->getFilename();

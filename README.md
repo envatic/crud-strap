@@ -5,11 +5,31 @@
 [![Latest Stable Version](https://poser.pugx.org/envatic/crud-strap/v/stable.svg)](https://packagist.org/packages/envatic/crud-strap)
 [![License](https://poser.pugx.org/envatic/crud-strap/license.svg)](https://packagist.org/packages/envatic/crud-strap)
 
-This Generator package provides various generators like CRUD, API, Controller, Model, Migration, View for your painless development of your applications.
-
+Advance crud Generator for laravel
+Generates the following;
+```
+Model (plus auto relationships, and  casts)
+Form validation ( In controller)
+// Form Request comming soon!
+Normal (blade) Controller or 
+Inertia (vue3) Controller or
+Api Controller
+Resource
+Transformer (Fractal)
+Database migration
+//Database seeder comming soon
+Database factory
+Routes
+Policy
+blade views or
+Inertia views (vue3)
+// Form 
+lang
+php enums (when not using db enums)
+```
 ## Requirements
-    Laravel >= 5.3
-    PHP >= 5.6.4
+    Laravel >= 9.0
+    PHP >= 8.1
 
 ## Installation
 ```
@@ -18,16 +38,6 @@ composer require envatic/crud-strap --dev
 
 ## Documentation
 Go through to the [detailed documentation](doc#readme)
-
-## Screencast
-
-[![Screencast](http://img.youtube.com/vi/831-PFBsYfw/0.jpg)](https://www.youtube.com/watch?v=K2G3kMQtY5Y)
-
-#### If you're still looking for easier one then try this [Admin Panel](https://github.com/envatic/laravel-admin)
-
-## Author
-
-[Sohel Amin](http://sohelamin.com) :email: [Email Me](mailto:sohelamincse@gmail.com)
 
 ## License
 

@@ -1,6 +1,101 @@
-## Options
 
-### Config Theme Options :
+
+### Why :
+
+Thius crud generator allows you too create a ready to go site with a single command
+`php artisan crud:strap`
+This will make
+`policy, transformer, controller, model, migration, view, route, factory,resource, lang, enums`.
+
+# .json files
+The command use `.json` files found in `crud` folder  to determine how to generate the tables and crud;
+example file schema is shown below;
+> Evey json files represents a table and its crud
+```json
+{
+	"fields": [
+		{
+			"name": "user_id",
+			"type": "foreignId|constrained|onUpdate:'cascade'|onDelete:'cascade'",
+			"rules": "required|integer|exists:users,id",
+		},
+		{
+			"name": "name",
+			"type": "string",
+			"rules": "required|string"
+		},
+
+		{
+			"name": "active",
+			"type": "boolean|default:true",
+			"rules": "required|boolean"
+		}
+	],
+	"relationships": [
+		{
+			"name": "user",
+			"type": "belongsTo",
+            "class": "User|user_id|id"
+		},
+        {
+			"name": "posts",
+			"type": "hasMany",
+            "class":"Post,bot_id,id",
+		}
+	]
+}
+
+```
+
+# Field:
+array of field;
+```json
+    {
+		"name": "user_id",
+		"type": "foreignId|constrained|onUpdate:'cascade'|onDelete:'cascade'",
+		"rules": "required|integer|exists:users,id"
+	},
+```
+# name:
+The name of the table column to be created. The same name will be used to create the form input fields if  `rules` if added;
+
+# type
+The database field type;
+the valid field types are [documented here](fields.md)
+You can also see how the `database fields` are resolved are converted to `form fields` [here](fields.md#conversions-to-form-fields ) and ho w to obverride them;
+> syntax
+The laravel valaidation syntax is adopted;
+`foreignId|constrained|onUpdate:'cascade'|onDelete:'cascade'`
+resolves to
+`foreignId()->constrained()->onUpdate('cascade')->onDelete('cascade')`
+use a pipe `|` to separate functions
+and a `:` to pass variables to functions
+to passing `strings` to the function it requires `quotes` to be used
+EG: `string|default:'new'` resolves to `string()->default('new')`
+
+> another examples
+
+`decimal:16,8|nullable|default:0` represents this `decimal(16,8)->nullable()->default(0)`
+
+`boolean|default:false` represents this `boolean()->default(false)`
+
+# rules
+The form validation rules fro this field in controller
+> fields without validation will not be used in forms
+
+	
+# relationships array:
+
+```json
+       {
+			"name": "posts",
+			"type": "hasMany",
+			"class": "Posts|bot_id|id"
+		}
+```
+
+
+
 
 This config is set in `app/configs/crudstrap.php`
 Every theme will have a config of its own
