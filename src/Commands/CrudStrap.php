@@ -63,7 +63,7 @@ class CrudStrap extends Command
             ->merge(collect($themeData))
             ->mapWithKeys(fn ($v, $k) => ["--$k" => $v])->all();
         $files = File::allFiles(base_path($theme['--folder']));
-        $folder = ltrim($theme['--folder'], "\\");
+        $folder = ltrim(((string)$theme['--folder']), "\\");
         $only =  $theme['--only'];
         unset($theme['--folder']);
         unset($theme['--name']);

@@ -17,6 +17,7 @@ use Envatic\CrudStrap\Commands\CrudResourceCommand;
 use Envatic\CrudStrap\Commands\CrudStrap;
 use Envatic\CrudStrap\Commands\CrudTransformerCommand;
 use Envatic\CrudStrap\Commands\CrudViewCommand;
+use Envatic\CrudStrap\Commands\CrudDelete;
 use Illuminate\Support\ServiceProvider;
 
 
@@ -75,6 +76,7 @@ class CrudStrapServiceProvider extends ServiceProvider
             CrudStrap::class,
             CrudTransformerCommand::class,
             CrudViewCommand::class,
+            CrudDelete::class,
         );
     }
 }

@@ -202,7 +202,7 @@ class CrudControllerCommand extends GeneratorCommand
 
 
 
-        if (\App::VERSION() < '5.3') {
+        if (app()->version() < '5.3') {
             $snippet = <<<EOD
         if (\$request->hasFile('{{fieldName}}')) {
             \$file = \$request->file('{{fieldName}}');
@@ -245,7 +245,8 @@ EOD;
                     $relmod = Str::of(str_replace("options=", "", $itemArray[2]))->ucfirst();
                     $useItems .= "\nuse App\\{$modelNamespaced}{$relmod};";
                     $useItems .= "\nuse App\\Http\\Resources\\{$relmod} as {$relmod}Resource;";
-                    $relatedModels .= "\${$relmod->lower()}s = {$relmod}Resource::collection($relmod::all());";
+                    //$relatedModels .= "\${$relmod->lower()}s = {$relmod}Resource::collection($relmod::all());";
+                    $relatedModels .= "\${$relmod->lower()}s = $relmod::pluck('id','name')->all();";
                     $relatedModelsItems .= ",'{$relmod->lower()}s'";
                 }
                 if (trim($type) == 'file') {

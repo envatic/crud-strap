@@ -12,7 +12,7 @@ class CrudLangCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'crud:jlang
+    protected $signature = 'crud:lang
                             {name : The name of the Crud.}
                             {--fields= : The field names for the form.}
                             {--f|force : Force delete.}
@@ -87,15 +87,14 @@ class CrudLangCommand extends Command
 
         foreach ($this->locales as $locale) {
             $locale = trim($locale);
-            $path = config('view.paths')[0] . '/../lang/' . $locale . '/';
-
+            $path = lang_path($locale);
             //create directory for locale
             if (!File::isDirectory($path)) {
                 File::makeDirectory($path, 0755, true);
             }
 
             $langFile = $this->viewDirectoryPath . 'lang.stub';
-            $newLangFile = $path . lcfirst($this->crudName) . '.php';
+            $newLangFile = $path .'/'. lcfirst($this->crudName) . '.php';
             if (!File::copy($langFile, $newLangFile)) {
                 echo "failed to copy $langFile...\n";
             } else {

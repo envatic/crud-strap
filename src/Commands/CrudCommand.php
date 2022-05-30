@@ -13,7 +13,8 @@ class CrudCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'crud:generate
+    protected $signature =
+    'crud:generate
                             {name : The name of the Crud.}
                             {--fields= : Field names for the form & migration.}
                             {--fields_from_file= : Fields from a json file.}
@@ -25,13 +26,20 @@ class CrudCommand extends Command
                             {--indexes= : The fields to add an index to.}
                             {--foreign-keys= : The foreign keys for the table.}
                             {--relationships= : The relationships for the model.}
-                            {--route=yes : Include Crud route to routes.php? yes|no.}
                             {--route-group= : Prefix of the route group.}
                             {--view-path= : The name of the view path.}
+                            {--faker= : Factory Fields.}
+                            {--prefix= : Migration Datetime Prefix.}
+                            {--f|force : Force delete.}
+                            {--casts= : The Model Field to cast.}
                             {--form-helper=html : Helper for generating the form.}
-                            {--localize=no : Allow to localize? yes|no.}
                             {--locales=en : Locales language type.}
-                            {--soft-deletes=no : Include soft deletes fields.}';
+                            {--soft-deletes : Include soft deletes fields.}
+							{--only=all  : Create only certain crude items.}
+							{--stub-path= : Optional name of the stubs folder in the view stubs dir.}';
+
+
+    
 
     /**
      * The console command description.
@@ -68,7 +76,7 @@ class CrudCommand extends Command
         $migrationName = $nameStr->plural()->snake();
         $tableName = $migrationName;
         $routeGroup = $this->option('route-group');
-        $this->routeName =   $nameStr->snake('-');
+        $this->routeName =   $nameStr->lower()->snake('-');
         $this->routePrefix = ($routeGroup) ? $routeGroup . '.' . $this->routeName : $this->routeName;
         $perPage = intval($this->option('pagination'));
         $controllerNamespace = ($this->option('controller-namespace')) ? $this->option('controller-namespace') . '\\' : '';
@@ -181,7 +189,7 @@ class CrudCommand extends Command
         $skipMigration = explode(',', str_replace(' ', '', config('crudstrap.skip.migration') ?? ""));
         $skipTable = in_array($tableName, $skipMigration);
         if (($all || in_array('migration', $only)) && !$skipTable) {
-            $this->call('crud:jmigration', array_filter([
+            $this->call('crud:migration', array_filter([
                 'name' => $migrationName,
                 '--schema' => $migrationFields,
                 '--prefix' => $this->option('prefix'),
@@ -245,7 +253,7 @@ class CrudCommand extends Command
         $skipController = explode(',', str_replace(' ', '', config('crudstrap.skip.controller') ?? ""));
         $skipCon = in_array($tableName, $skipController);
         if (($all || in_array('controller', $only)) && !$skipCon) {
-            $this->call('crud:jcontroller', array_filter([
+            $this->call('crud:controller', array_filter([
                 'name' => $controllerNamespace . $name . 'Controller',
                 '--crud-name' => $name,
                 '--model-name' => $modelName,
@@ -268,7 +276,7 @@ class CrudCommand extends Command
                 $modelUse .= 'use Illuminate\Database\Eloquent\Factories\HasFactory;';
                 $modelUseTrait .= 'use HasFactory;';
             }
-            $this->call('crud:jmodel', array_filter([
+            $this->call('crud:model', array_filter([
                 'name' => $modelNamespace . $modelName,
                 '--fillable' => $fillable,
                 '--table' => $tableName,
@@ -285,7 +293,7 @@ class CrudCommand extends Command
         $skipView = explode(',', str_replace(' ', '', config('crudstrap.skip.view') ?? ""));
         $skipVie = in_array($tableName, $skipView);
         if (($all || in_array('view', $only)) && !$skipVie)
-            $this->call('crud:jview', array_filter([
+            $this->call('crud:view', array_filter([
                 'name' => $name,
                 '--fields' => $viewFields,
                 '--validations' => $validations,
@@ -295,6 +303,7 @@ class CrudCommand extends Command
                 '--pk' => $primaryKey,
                 '--form-helper' => $formHelper,
                 '--stub-path' => $stubs,
+                '--inertia' =>  $formHelper == 'inertia',
                 '--force' => $force,
             ]));
         $skipLang = explode(',', str_replace(' ', '', config('crudstrap.skip.lang') ?? ""));
@@ -308,14 +317,13 @@ class CrudCommand extends Command
         }
 
         // For optimizing the class loader
-        if (\App::VERSION() < '5.6') {
+        if (app()->version() < '5.6') {
             $this->callSilent('optimize');
         }
         if ($all || in_array('route', $only)) {
             // Updating the Http/routes.php file
             $routeFile = app_path('Http/routes.php');
-
-            if (\App::VERSION() >= '5.3') {
+            if (app()->version() >= '5.3') {
                 $routeFile = base_path('routes/web.php');
             }
 
@@ -326,8 +334,14 @@ class CrudCommand extends Command
 
             if (file_exists($routeFile)) {
                 $this->controller =  $name . 'Controller';
-                $routez = $api ? $this->addApiRoutes() : $this->addRoutes();
-                $isAdded = File::append($routeFile, "\n" . implode("\n", $routez));
+                $routeContent = $api ? $this->addApiRoutes() : $this->addRoutes();
+                $routes = "\n" . implode("\n", $routeContent);
+                $file = File::get($routeFile);
+                if(preg_match('/(\#' . $this->routeName . ')/',$file, $matches) == 1){
+                    $outfile = preg_replace('/(\#' . $this->routeName .')(.*?)(\#' . $this->routeName . ')/s', $routes, $file);
+                    return File::replace($routeFile,   $outfile);
+                }
+                $isAdded = File::append($routeFile, $routes);
                 if ($isAdded) {
                     $this->info('Crud/Resource route added to ' . $routeFile);
                 } else {
@@ -363,7 +377,6 @@ class CrudCommand extends Command
                 $fieldsString .= $field->name . '#' . $field->type . '#options=' . json_encode($field->options) . ';';
                 continue;
             }
-
             $name = "";
             if (Str::contains($field->type, 'foreignId')) {
                 $fname = '#options=' . str_replace("_id", "", $field->name);
@@ -414,26 +427,22 @@ class CrudCommand extends Command
         return $fieldsString;
     }
 
-    protected function addRoutes()
-    {
+    protected function addRoutes(){
         $tb = '    ';
+        $routeName = Str::of($this->routeName)->lower()->snake();
+        $routeVar = Str::of($this->routeName)->lower()->snake()->singular();
         return [
-            $tb . "Route::resource('" . $this->routeName . "', '" . $this->controller . "',[
-" . $tb . $tb . "'names' => [
-" . $tb . $tb . $tb . "'index'   => '" . $this->routePrefix . ".index',
-" . $tb . $tb . $tb . "'create'   => '" . $this->routePrefix . ".create',
-" . $tb . $tb . $tb . "'store'   => '" . $this->routePrefix . ".store',
-" . $tb . $tb . $tb . "'show'   => '" . $this->routePrefix . ".show',
-" . $tb . $tb . $tb . "'edit'   => '" . $this->routePrefix . ".edit',
-" . $tb . $tb . $tb . "'update'   => '" . $this->routePrefix . ".update',
-" . $tb . $tb . $tb . "'destroy' => '" . $this->routePrefix . ".destroy',
-" . $tb . $tb . "],
-" . $tb . "]);
-" . $tb . "Route::post('" . $this->routeName . "/table',['as'=>'" . $this->routePrefix . ".table','uses'=>'" . $this->controller . "@table']); 
-" . $tb . "Route::post('" . $this->routeName . "/toggle-status/{id}',['as'=>'" . $this->routePrefix . ".toggle_status','uses'=>'" . $this->controller . "@toggle_status']);
-" . $tb . "Route::post('" . $this->routeName . "/mass-toggle',['as'=>'" . $this->routePrefix . ".masstoggle','uses'=>'" . $this->controller . "@toggle_statuses']);
-" . $tb . "Route::post('" . $this->routeName . "/mass-delete',['as'=>'" . $this->routePrefix . ".massdelete','uses'=>'" . $this->controller . "@delete']);
-"
+"#$routeName
+ Route::name('{$this->routePrefix}.')->controller({$this->controller}::class)->group(function () {
+    Route::get('/{$routeName}', 'index')->name('index');
+    Route::get('/{$routeName}/create', 'create')->name('create');
+    Route::post('/{$routeName}/store', 'store')->name('store');
+    Route::get('/{$routeName}/{{$routeVar}}/show', 'show')->name('show');
+    Route::get('/{$routeName}/{{$routeVar}}/edit', 'edit')->name('edit');
+    Route::put('/{$routeName}/{{$routeVar}}', 'update')->name('update');
+    Route::delete('/{$routeName}/{{$routeVar}}', 'destroy')->name('destroy');
+});
+#$routeName"
         ];
     }
 
