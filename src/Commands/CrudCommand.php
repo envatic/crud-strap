@@ -404,6 +404,12 @@ class CrudCommand extends Command
         $fieldsString = '';
         $relations = $fields->foreign_keys ?? null;
         foreach ($fields->fields as $field) {
+            $type = $field->type??null;
+            if(!$type){
+                $this->error('Invalid Field Mark up');
+                $this->info("In $file");
+                dd($field);
+            }
             if (Str::startsWith($field->type, 'select') || Str::startsWith($field->type, 'enum')) {
                 $fieldsString .= $field->name . '#' . $field->type . '#options=' . json_encode($field->options) . ';';
                 continue;

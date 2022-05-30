@@ -33,6 +33,7 @@ class CrudDelete extends Command
     public function handle()
     {
         $theme_name = $this->argument('theme');
+        $listCruds = $this->option('crud');
         $cruds = explode(',', $this->option('crud'));
         $themeData = collect(config('crudstrap.themes'))
             ->first(fn ($i) => $i['name'] == $theme_name);
@@ -56,14 +57,15 @@ class CrudDelete extends Command
         ];
         $theme = collect($default)
             ->merge(collect($themeData))->all();
-       
+
         $files = File::allFiles(base_path($theme['folder']));
-        $validfiles = collect($files)->filter(function ($file) use ($cruds) {
+        $valid  =  $listCruds == "" ? collect($files) : collect($files)->filter(function ($file) use ($cruds) {
             $ext = explode('.', $file->getFilename());
             $nameStr = Str::of(preg_replace('/[(0-9)]+_/', '', array_shift($ext)));
             return  in_array($nameStr->lower()->singular(), array_map('strtolower', $cruds))
                 || in_array($nameStr->lower()->plural(), array_map('strtolower', $cruds));
-        })->map(function ($file) {
+        });
+        $validfiles =  $valid->map(function ($file) {
             $data = json_decode(File::get($file->getPathName()));
             $ext = explode('.', $file->getFilename());
             $nameStr = preg_replace('/[(0-9)]+_/', '', array_shift($ext));
@@ -87,7 +89,7 @@ class CrudDelete extends Command
                 if ($locales->count()) {
                     $locales->map(function ($locale) use ($crud) {
                         $path = lang_path($locale);
-                        $langFile = $path .'/'. $crud->lower(). '.php';
+                        $langFile = $path . '/' . $crud->lower() . '.php';
                         if (File::isFile($langFile)) {
                             File::delete($langFile);
                             $this->info("lang {$locale} deleted succesfully");
@@ -107,9 +109,10 @@ class CrudDelete extends Command
                         ->explode('|')
                         ->shift(1);
                     if (in_array($type, ['select', 'enum'])) {
-                        $file = app_path("Enums/{$crud->singular()->ucfirst()}{$field->name}.php");
+                        $fieldName = Str::of($field->name)->ucfirst();
+                        $file = app_path("Enums/{$crud->singular()->ucfirst()}{$fieldName}.php");
                         File::delete($file);
-                        $this->info("Enum {$crud->singular()->ucfirst()}{$field->name} deleted succesfully");
+                        $this->info("Enum {$crud->singular()->ucfirst()}{$fieldName} deleted succesfully");
                     }
                 });
             }
@@ -217,14 +220,6 @@ class CrudDelete extends Command
                     $this->error('no migration');
                 }
             }
-
-
-
-
-
-
-
-
             // transformer,,,
         }
     }
