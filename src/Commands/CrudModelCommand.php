@@ -142,9 +142,17 @@ EOD;
                 $modifiers .= "->" . $modname . "(" .  $var . ")";
             }
         }
-
+        $name = Str::contains($relationshipTypeName,'has')?'Owns':"Belongs To";
         $tabIndent = '    ';
-        $code = "public function " . $relationshipName . "()\n" . $tabIndent . "{\n" . $tabIndent . $tabIndent
+        $item = Str::of($this->argument('name'))->singular()->lower()->explode('\\')->pop();
+        $code = "
+    /**\n
+    * Get the {$relationshipName} the {$item} {$name}.
+    *
+    * @return \Illuminate\Database\Eloquent\Relations\\{$relationshipTypeName}
+    */
+    ";
+        $code .= "public function " . $relationshipName . "()\n" . $tabIndent . "{\n" . $tabIndent . $tabIndent
             . "return \$this->" . $relationshipTypeName . "(" . $argsString . ")" . $modifiers . ";"
             . "\n" . $tabIndent . "}";
 

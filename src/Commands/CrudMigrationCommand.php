@@ -310,23 +310,26 @@ class CrudMigrationCommand extends GeneratorCommand
             if (count($parts) == 3) {
                 $schemaDropFields = "\$table->dropForeign(['{$iname}']);";
                 $foreignKeysFields .= "\$table->foreign('" . trim($parts[0]) . "')"
-                    . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')";
+                    . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) .
+                "');" . "\n" . $tabIndent . $tabIndent. $tabIndent;;
             } elseif (count($parts) == 4) {
                 $schemaDropFields = "\$table->dropForeign(['{$iname}']);";
                 $foreignKeysFields .= "\$table->foreign('" . trim($parts[0]) . "')"
                     . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')"
-                    . "->onDelete('" . trim($parts[3]) . "')" . "->onUpdate('" . trim($parts[3]) . "')";
+                    . "->onDelete('" . trim($parts[3]) . "')" . "->onUpdate('" . trim($parts[3]) .
+                "');" . "\n" . $tabIndent . $tabIndent. $tabIndent;;
             } elseif (count($parts) == 5) {
                 $schemaDropFields = "\$table->dropForeign(['{$iname}']);";
                 $foreignKeysFields .= "\$table->foreign('" . trim($parts[0]) . "')"
                     . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')"
-                    . "->onDelete('" . trim($parts[3]) . "')" . "->onUpdate('" . trim($parts[4]) . "')";
+                    . "->onDelete('" . trim($parts[3]) . "')" . "->onUpdate('" . trim($parts[4]) . "');" . "\n" . $tabIndent . $tabIndent. $tabIndent;
             } else {
                 continue;
             }
         }
-        $endcolon = $foreignKeysFields == "" ? "" : ";";
-        $foreignKeysFields .= $endcolon . "\n" . $tabIndent . $tabIndent;
+
+    
+        $foreignKeysFields .=  "\n" . $tabIndent . $tabIndent;
         $primaryKey = $this->option('pk');
         $softDeletes = $this->option('soft-deletes');
         $softDeletesSnippets = '';

@@ -1,0 +1,5 @@
+<Select
+	:items="%%options%%"
+	v-model="%%itemName%%"
+	:error="form.error.%%itemName%%"
+/>

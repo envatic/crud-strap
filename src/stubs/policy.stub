@@ -30,7 +30,7 @@ class DummyClass
      */
     public function viewAny(DummyUser $user, DummyModel $dummyModel)
     {
-        return $user->hasPermission('viewany.dummyModel') || true;
+        return $user->hasPermission('viewany.dummyModel');
     }
 
     /**
@@ -42,7 +42,7 @@ class DummyClass
      */
     public function view(DummyUser $user, DummyModel $dummyModel)
     {
-		return $user->hasPermission('view.dummyModel') || true;
+		return $user->hasPermission('view.dummyModel');
     }
 
     /**
@@ -53,7 +53,7 @@ class DummyClass
      */
     public function create(DummyUser $user)
     {
-		return $user->hasPermission('create.dummyModel') || true;
+		return $user->hasPermission('create.dummyModel');
     }
 
     /**
@@ -65,7 +65,7 @@ class DummyClass
      */
     public function update(DummyUser $user, DummyModel $dummyModel)
     {
-        return $user->hasPermission('update.dummyModel') || $user->id == $dummyModel->user_id;
+        return $user->hasPermission('update.dummyModel') || $user->id == ($dummyModel->user_id??null);
     }
 
     /**
@@ -77,7 +77,7 @@ class DummyClass
      */
     public function delete(DummyUser $user, DummyModel $dummyModel)
     {
-        return  $user->hasPermission('delete.dummyModel')||$user->id == $dummyModel->user_id;
+        return  $user->hasPermission('delete.dummyModel')||$user->id == ($dummyModel->user_id??null);
     }
 
     /**
@@ -89,7 +89,7 @@ class DummyClass
      */
     public function restore(DummyUser $user, DummyModel $dummyModel)
     {
-         return $user->hasPermission('restore.dummyModel') || $user->id == $dummyModel->user_id;
+         return $user->hasPermission('restore.dummyModel') || $user->id == ($dummyModel->user_id??null);
     }
 
     /**
@@ -101,6 +101,6 @@ class DummyClass
      */
     public function forceDelete(DummyUser $user, DummyModel $dummyModel)
     {
-        return $user->hasPermission('forcedelete.dummyModel') || $user->id == $dummyModel->user_id;		
+        return $user->hasPermission('forcedelete.dummyModel') || $user->id == ($dummyModel->user_id??null);		
     }
 }

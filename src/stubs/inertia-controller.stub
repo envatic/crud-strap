@@ -13,18 +13,18 @@ class DummyClass extends Controller
      * Display a listing of the resource.
      * @return \Illuminate\View\View
      */
-    public function index(Request $request)
+    public function index(Request $request )
     {
         $keyword = $request->get('search');
         $perPage = {{pagination}};
         if (!empty($keyword)) {
-            ${{crudName}}Items  = {{modelName}}::{{whereSnippet}}latest()->paginate($perPage);
+            ${{crudName}}Items  = {{modelName}}::{{relationsList}}{{whereSnippet}}latest()->paginate($perPage);
         } else {
             ${{crudName}}Items = {{modelName}}::{{relationsList}}latest()->paginate($perPage);
         }
         ${{crudName}} = {{modelName}}Resource::collection(${{crudName}}Items);
-        {{relatedModels}}
-        return Inertia::render('{{viewPath}}{{viewName}}/List', compact('{{crudName}}'{{relatedModelsItems}}));
+{{relatedModels}}
+        return Inertia::render('{{viewPath}}{{viewName}}/Index', compact('{{crudName}}'{{relatedModelsItems}}));
     }
 
     /**
@@ -33,7 +33,7 @@ class DummyClass extends Controller
      */
     public function create()
     {
-        {{relatedModels}}
+{{relatedModels}}
         return Inertia::render('{{viewPath}}{{viewName}}/Create', compact('{{crudName}}'{{relatedModelsItems}}));
     }
 
@@ -42,13 +42,13 @@ class DummyClass extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function store(Request $request)
+    public function store(Request $request )
     {
         {{validationRules}}
         {{fileSnippet}}
         ${{crudNameSingular}} = new {{modelName}};
-        {{saveable}}
-        return redirect('{{routePrefix}}.{{crudName}}.index')->with('success', '{{modelName}} added!');
+{{saveable}}
+        return redirect()->route('{{routePrefix}}{{crudName}}.index')->with('success', '{{modelName}} added!');
     }
 
     /**
@@ -56,7 +56,7 @@ class DummyClass extends Controller
      * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function show($id)
+    public function show(Request $request , $id)
     {
         ${{crudNameSingular}} = {{modelName}}::{{relationsList}}findOrFail($id);
         ${{crudNameSingular}}Resource = new {{modelName}}Resource(${{crudNameSingular}});
@@ -68,10 +68,10 @@ class DummyClass extends Controller
      * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function edit($id)
+    public function edit(Request $request , $id)
     {
         ${{crudNameSingular}} = {{modelName}}::findOrFail($id);
-        {{relatedModels}}
+{{relatedModels}}
         ${{crudNameSingular}}Resource = new {{modelName}}Resource(${{crudNameSingular}});
         return Inertia::render('{{viewPath}}{{viewName}}/Edit', compact('{{crudNameSingular}}Resource'));
     }
@@ -84,13 +84,12 @@ class DummyClass extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function update(Request $request, $id)
+    public function update(Request $request , $id)
     {
         {{validationRules}}
-        $requestData = $request->all();
         {{fileSnippet}}
         ${{crudNameSingular}} = {{modelName}}::findOrFail($id);
-        {{saveable}}
+{{saveable}}
         return back()->with('success', '{{modelName}} updated!');
     }
 
@@ -101,9 +100,9 @@ class DummyClass extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function destroy($id)
+    public function destroy(Request $request , $id)
     {
         {{modelName}}::destroy($id);
-        return redirect('{{routePrefix}}.{{crudName}}.index')->with('success', '{{modelName}} deleted!');
+        return redirect()->route('{{routePrefix}}{{crudName}}.index')->with('success', '{{modelName}} deleted!');
     }
 }

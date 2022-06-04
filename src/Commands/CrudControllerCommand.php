@@ -151,7 +151,7 @@ class CrudControllerCommand extends GeneratorCommand
         $modelNamespace = $this->option('model-namespace');
         $modelNamespaced = $this->option('model-namespace');
         $routeGroup = ($this->option('route-group')) ? $this->option('route-group') . '/' : '';
-        $routePrefix = ($this->option('route-group')) ? $this->option('route-group') : '';
+        $routePrefix = ($this->option('route-group')) ? $this->option('route-group').'.' : '';
         $routePrefixCap = ucfirst($routePrefix);
         $perPage = intval($this->option('pagination'));
         $viewName = $cname->snake('-')->ucfirst();
@@ -190,14 +190,13 @@ class CrudControllerCommand extends GeneratorCommand
                 $fieldName = trim($parts[0]);
                 $rules = trim($parts[1]);
                 $xrules .= "\n\t\t\t'$fieldName' => '$rules',";
-                $saveable .= "\n\t\t$" . "{$crudNameSingular}->{$fieldName} = \$request->{$fieldName};";
             }
             $validationRules .= substr($xrules, 0, -1); // lose the last comma
             $validationRules .= "\n\t\t]);";
             $jsvalidation    = "\$jsvalidator = JsValidator::make([";
             $jsvalidation .= substr($xrules, 0, -1); // lose the last comma again
             $jsvalidation .= "\n\t\t]);";
-            $saveable .= "\n\t\t$" . $crudNameSingular . "->save();";
+           
         }
 
 
@@ -244,18 +243,20 @@ EOD;
                 if ((trim($type) != 'select' || trim($type) != 'enum') &&  trim($type) == 'foreignId' && isset($itemArray[2])) {
                     $relmod = Str::of(str_replace("options=", "", $itemArray[2]))->ucfirst();
                     $useItems .= "\nuse App\\{$modelNamespaced}{$relmod};";
-                    $useItems .= "\nuse App\\Http\\Resources\\{$relmod} as {$relmod}Resource;";
+                    //$useItems .= "\nuse App\\Http\\Resources\\{$relmod} as {$relmod}Resource;";
                     //$relatedModels .= "\${$relmod->lower()}s = {$relmod}Resource::collection($relmod::all());";
-                    $relatedModels .= "\${$relmod->lower()}s = $relmod::pluck('id','name')->all();";
+                    $relatedModels .= "\t\t\${$relmod->lower()}s = $relmod::pluck('id','name')->all();\n";
                     $relatedModelsItems .= ",'{$relmod->lower()}s'";
                 }
                 if (trim($type) == 'file') {
                     $fileSnippet .= str_replace('{{fieldName}}', trim($itemArray[0]), $snippet) . "\n";
                 }
                 $fieldName = trim($itemArray[0]);
+                $saveable .= "\n\t\t$" . "{$crudNameSingular}->{$fieldName} = \$request->{$fieldName};";
                 $whereSnippet .= ($index == 0) ? "where('$fieldName', 'LIKE', \"%\$keyword%\")" . "\n                " : "->orWhere('$fieldName', 'LIKE', \"%\$keyword%\")" . "\n                ";
             }
             $whereSnippet .= "->";
+            $saveable .= "\n\t\t$" . $crudNameSingular . "->save();";
         }
         return $this->replaceNamespace($stub, $name)
             ->replaceViewPath($stub, $viewPath)
@@ -293,7 +294,6 @@ EOD;
     protected function replaceViewName(&$stub, $viewName)
     {
         $stub = str_replace('{{viewName}}', $viewName, $stub);
-
         return $this;
     }
 

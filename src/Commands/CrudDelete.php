@@ -65,11 +65,18 @@ class CrudDelete extends Command
             return  in_array($nameStr->lower()->singular(), array_map('strtolower', $cruds))
                 || in_array($nameStr->lower()->plural(), array_map('strtolower', $cruds));
         });
+
         $validfiles =  $valid->map(function ($file) {
             $data = json_decode(File::get($file->getPathName()));
-            $ext = explode('.', $file->getFilename());
+            if($this->jsonLastError()){
+                $this->error("Error in file: {$file->getPathName()}");
+                $this->error($this->jsonLastError());
+            }
+            if(!$data) dd($file->getPathName());
+            $ext = explode('.', $file->getFileName());
             $nameStr = preg_replace('/[(0-9)]+_/', '', array_shift($ext));
             $data->crudName =  $nameStr;
+            $data->fileName =  $file->getFileName();
             return $data;
         });
         foreach ($validfiles as $file) {
@@ -103,7 +110,8 @@ class CrudDelete extends Command
             }
 
             if ($all->contains('enums') || $all->contains('all')) {
-                collect($file->fields)->each(function ($field) use ($crud) {
+                collect($file->fields)->each(function ($field) use ($crud, $file) {
+                    if(!is_string($field->type)) $this->error("Invalid Json file: {$file->fileName}");
                     $type = Str::of($field->type)
                         ->replace(':', '|')
                         ->explode('|')
@@ -164,6 +172,7 @@ class CrudDelete extends Command
                         $file = File::get($route);
                         if (preg_match('/(\#' . $crud->lower() . ')/', $file, $matches) == 1) {
                             $outfile = preg_replace('/(\#' . $crud->lower() . ')(.*?)(\#' . $crud->lower() . ')/s', "", $file);
+                            $outfile = str_replace('_types',"", $outfile);
                             File::replace($route,   $outfile);
                             $this->info('Route info cleared');
                         } else {
@@ -222,5 +231,32 @@ class CrudDelete extends Command
             }
             // transformer,,,
         }
+    }
+    public function jsonLastError()
+    {
+        switch (json_last_error()) {
+            case JSON_ERROR_NONE:
+                return false;
+                break;
+            case JSON_ERROR_DEPTH:
+               return ' - Maximum stack depth exceeded';
+                break;
+            case JSON_ERROR_STATE_MISMATCH:
+                return' - Underflow or the modes mismatch';
+                break;
+            case JSON_ERROR_CTRL_CHAR:
+                return' - Unexpected control character found';
+                break;
+            case JSON_ERROR_SYNTAX:
+                return' - Syntax error, malformed JSON';
+                break;
+            case JSON_ERROR_UTF8:
+                return' - Malformed UTF-8 characters, possibly incorrectly encoded';
+                break;
+            default:
+                return' - Unknown error';
+                break;
+        }
+        
     }
 }

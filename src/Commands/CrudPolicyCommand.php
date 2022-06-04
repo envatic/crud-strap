@@ -3,7 +3,6 @@
 namespace Envatic\CrudStrap\Commands;
 
 use Illuminate\Foundation\Console\PolicyMakeCommand;
-
 class CrudPolicyCommand extends PolicyMakeCommand
 {
     
@@ -13,6 +12,4 @@ class CrudPolicyCommand extends PolicyMakeCommand
         ? config('crudstrap.path') . '/policy.stub'
         : __DIR__ . '/../stubs/policy.stub';
     }
-
-    
 }

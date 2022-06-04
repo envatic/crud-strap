@@ -38,9 +38,6 @@ class CrudCommand extends Command
 							{--only=all  : Create only certain crude items.}
 							{--stub-path= : Optional name of the stubs folder in the view stubs dir.}';
 
-
-    
-
     /**
      * The console command description.
      *
@@ -148,8 +145,9 @@ class CrudCommand extends Command
             $modelUse .= "use Envatic\\CrudStrap\\Traits\\HasUuid;";
             $modelUseTrait .= 'use HasUuid;';
         }
-        $commaSeparetedString = implode("', '", $fillableArray);
-        $fillable = "['" . $commaSeparetedString . "']";
+        $tab = "    ";
+        $commaSeparetedString = collect($fillableArray)->implode("',\n{$tab}{$tab}'");
+        $fillable = "[\n        '" . $commaSeparetedString . "'\n   ]";
         $commaSeparetedArray = implode("\n", $transformArray);
         $transform  = "[\n" . $commaSeparetedArray . "\n" . $tabIndent . $tabIndent . "]";
         $locales = $this->option('locales');
@@ -205,7 +203,7 @@ class CrudCommand extends Command
         if (($all || in_array('policy', $only)) && !$skipPol)
             $this->call('make:policy', array_filter([
                 'name' => $modelName . 'Policy',
-                '--model' => $modelNamespace . $modelName,
+                '--model' => $modelName,
             ]));
         $skipTranformer = explode(',', str_replace(' ', '', config('crudstrap.skip.transformer') ?? ""));
         $skipTrn = in_array($tableName, $skipTranformer);
@@ -274,8 +272,9 @@ class CrudCommand extends Command
         if (($all || in_array('model', $only)) && !$skipMod) {
             if ($all || in_array('factory', $only)) {
                 $modelUse .= 'use Illuminate\Database\Eloquent\Factories\HasFactory;';
-                $modelUseTrait .= 'use HasFactory;';
+                $modelUseTrait .= '    use HasFactory;';
             }
+         
             $this->call('crud:model', array_filter([
                 'name' => $modelNamespace . $modelName,
                 '--fillable' => $fillable,
@@ -361,6 +360,7 @@ class CrudCommand extends Command
         $relations = $fields->foreign_keys ?? null;
         $fillableArray = [];
         foreach ($fields->fields as $field) {
+            $fillableArray[] = Str::of($field->name)->replace(':', '|')->explode('|')->first();
             $rules = strlen($field->rules ?? '') > 0;
             if (!$validations && !$rules) continue;
             if ($validations && !$rules) {
@@ -372,7 +372,6 @@ class CrudCommand extends Command
                 }
                 if (!$validated) continue;
             }
-            $fillableArray[] = Str::of($field->name)->replace(':', '|')->explode('|')->first();
             if (Str::startsWith($field->type, 'select') || Str::startsWith($field->type, 'enum')) {
                 $fieldsString .= $field->name . '#' . $field->type . '#options=' . json_encode($field->options) . ';';
                 continue;
@@ -649,4 +648,5 @@ class CrudCommand extends Command
         }
         return $castsFields;
     }
+    
 }

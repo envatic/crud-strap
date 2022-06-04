@@ -1,0 +1,11 @@
+<div class="sm:col-span-6">
+	<label
+		for="%1$s"
+        :class="form.error.%1$s?'text-gray-700':' text-red-700'"
+		class="block text-sm font-medium"
+	> {{%2$s}}</label>
+	<div class="mt-1">
+		 %3$s
+	</div>
+    <p v-if="form.error.%1$s" class="mt-1 text-sm text-red-600 dark:text-red-500"><span class="font-medium">Oops!</span> {{form.error.%1$s}}</p>
+</div>

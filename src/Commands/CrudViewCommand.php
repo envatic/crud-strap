@@ -288,7 +288,12 @@ class CrudViewCommand extends Command
      *
      * @var string
      */
-    protected $viewTemplateDir = '';
+    protected $viewTemplateDir = '';/**
+     * Template directory where views are generated
+     *
+     * @var string
+     */
+    protected $relatedModelsItems = '';
 
     /**
      * Delimiter used for replacing values
@@ -396,15 +401,16 @@ class CrudViewCommand extends Command
                 }
 
                 if ($type != 'select' && trim($type) != 'enum' &&  isset($itemArray[2]) && Str::startsWith($itemArray[2], 'options')) {
-                    $options = trim($itemArray[3]);
+                    $options = trim($itemArray[2]);
                     $options = str_replace('options=', '', $options);
                     $this->formFields[$x]['options'] = $options;
                     $relmod = Str::of(str_replace("options=", "", $itemArray[2]))->ucfirst();
-                    $this->propsHtml .= $tb . $tb . "{$relmod->lower()}s" . ':{ type: Object, required:true }' . PHP_EOL;
+                    $this->propsHtml .= $tb . $tb . "{$relmod->lower()}s" . ':{ type: Object, required:true },' . PHP_EOL;
                     $this->relatedModelsItems .= ",'{$relmod->lower()}s'";
                 }
                 $x++;
             }
+            
         }
 
         foreach ($this->formFields as $item) {
@@ -710,13 +716,15 @@ class CrudViewCommand extends Command
      * @return string
      */
     protected function createSelectField($item)
-    {
+    { 
         $start = $this->delimiter[0];
         $end = $this->delimiter[1];
         $required = $item['required'] ? 'required' : '';
+        $data = json_decode($item['options'],true);
+        $options = $this->json_encode_advanced($data);
         $markup = $this->getMarkup('select-field');
         $markup = str_replace($start . 'required' . $end, $required, $markup);
-        $markup = str_replace($start . 'options' . $end, $item['options'], $markup);
+        $markup = str_replace($start . 'options' . $end, $options, $markup);
         $markup = str_replace($start . 'itemName' . $end, $item['name'], $markup);
         $markup = str_replace($start . 'crudNameSingular' . $end, $this->crudNameSingular, $markup);
         return $this->wrapField(
@@ -724,4 +732,43 @@ class CrudViewCommand extends Command
             $markup
         );
     }
+
+    function json_encode_advanced(array $arr, $sequential_keys = false, $quotes = true, $beautiful_json = true)
+    {
+
+        $output = "{";
+        $count = 0;
+        foreach ($arr as $key => $value) {
+
+            if ($this->isAssoc($arr) || (!$this->isAssoc($arr) && $sequential_keys == true)) {
+                $output .=  $key . ' : ';
+            }
+
+            if (is_array($value)) {
+                $output .= $this->json_encode_advanced($value, $sequential_keys, $quotes, $beautiful_json);
+            } else if (is_bool($value)) {
+                $output .= ($value ? 'true' : 'false');
+            } else if (is_numeric($value)) {
+                $output .= $value;
+            } else {
+                $output .= ($quotes || $beautiful_json ? "'" : '') . $value . ($quotes || $beautiful_json ? "'" : '');
+            }
+
+            if (++$count < count($arr)) {
+                $output .= ', ';
+            }
+        }
+
+        $output .= "}";
+
+        return $output;
+    }
+    function isAssoc(array $arr)
+    {
+        if (array() === $arr) return false;
+        return array_keys($arr) !== range(0, count($arr) - 1);
+    }
+
+
+
 }
