@@ -328,6 +328,32 @@ class CrudViewCommand extends Command
             : ['%%', '%%'];
     }
 
+    public function reset(){
+        $this->formFields = [];
+        $this->inertia = false;
+        $this->formFieldsHtml = '';
+        $this->defaultColumnsToShow = 3;
+        $this->varName = '';
+        $this->crudName = '';
+        $this->crudNameCap = '';
+        $this->crudNameSingular = '';
+        $this->primaryKey = 'id';
+        $this->modelName = '';
+        $this->modelNameCap = '';
+        $this->viewName = '';
+        $this->routePrefix = '';
+        $this->routePrefixCap = '';
+        $this->routeGroup = '';
+        $this->formHeadingHtml = '';
+        $this->formBodyHtml = '';
+        $this->formBodyHtmlForShowView = '';
+        $this->viewTemplateDir = '';
+        $this->relatedModelsItems = '';
+        $this->relatedModelsItems = '';
+        $this->formBodyVueHtml="";
+        $this->propsHtml = "";
+    }
+
     /**
      * Execute the console command.
      *
@@ -335,7 +361,8 @@ class CrudViewCommand extends Command
      */
 
     public function handle()
-    {
+    { 
+        $this->reset();
         $formHelper = $this->option('form-helper');
         $stubs =  ($this->option('stub-path')) ? $this->option('stub-path') . '/' : "";
         $this->viewDirectoryPath = config('crudstrap.custom_template')
@@ -437,13 +464,14 @@ class CrudViewCommand extends Command
             $this->filledVueForm .= $tb . $tb . $field . ':props.' . $this->crudNameSingular . '.' . $field . ',' . PHP_EOL;
             $i++;
         }
+
         //dd($this->emptyVueForm ,$this->filledVueForm );
         $this->templateStubs($path);
 
         $this->info('View created successfully.');
     }
 
-
+ 
 
 
     protected function createFormField($item)
@@ -695,7 +723,6 @@ class CrudViewCommand extends Command
         $start = $this->delimiter[0];
         $end = $this->delimiter[1];
         $required = $item['required'] ? 'required' : '';
-        $markup = File::get($this->viewDirectoryPath . 'form-fields/textarea-field.blade.stub');
         $markup = $this->getMarkup('textarea-field');
         $markup = str_replace($start . 'required' . $end, $required, $markup);
         $markup = str_replace($start . 'fieldType' . $end, $this->typeLookup[$item['type']], $markup);
