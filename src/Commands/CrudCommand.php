@@ -1,6 +1,7 @@
 <?php
 
 namespace Envatic\CrudStrap\Commands;
+
 use Envatic\CrudStrap\Faker;
 use Illuminate\Support\Facades\File;
 use Illuminate\Console\Command;
@@ -50,6 +51,8 @@ class CrudCommand extends Command
 
     /** @var string  */
     protected $controller = '';
+    /** @var string  */
+    protected $routePrefix = '';
 
     /**
      * Create a new command instance.
@@ -274,7 +277,7 @@ class CrudCommand extends Command
                 $modelUse .= 'use Illuminate\Database\Eloquent\Factories\HasFactory;';
                 $modelUseTrait .= '    use HasFactory;';
             }
-         
+
             $this->call('crud:model', array_filter([
                 'name' => $modelNamespace . $modelName,
                 '--fillable' => $fillable,
@@ -316,28 +319,20 @@ class CrudCommand extends Command
         }
 
         // For optimizing the class loader
-        if (app()->version() < '5.6') {
-            $this->callSilent('optimize');
-        }
+        $this->callSilent('optimize');
         if ($all || in_array('route', $only)) {
             // Updating the Http/routes.php file
-            $routeFile = app_path('Http/routes.php');
-            if (app()->version() >= '5.3') {
-                $routeFile = base_path('routes/web.php');
-            }
-
+            $routeFile = base_path('routes/web.php');
             if ($api) {
                 $routeFile = base_path('routes/api.php');
             }
-
-
             if (file_exists($routeFile)) {
                 $this->controller =  $name . 'Controller';
                 $routeContent = $api ? $this->addApiRoutes() : $this->addRoutes();
                 $routes = "\n" . implode("\n", $routeContent);
                 $file = File::get($routeFile);
-                if(preg_match('/(\#' . $this->routeName . ')/',$file, $matches) == 1){
-                    $outfile = preg_replace('/(\#' . $this->routeName .')(.*?)(\#' . $this->routeName . ')/s', $routes, $file);
+                if (preg_match('/(\#' . $this->routeName . ')/', $file, $matches) == 1) {
+                    $outfile = preg_replace('/(\#' . $this->routeName . ')(.*?)(\#' . $this->routeName . ')/s', $routes, $file);
                     return File::replace($routeFile,   $outfile);
                 }
                 $isAdded = File::append($routeFile, $routes);
@@ -403,8 +398,8 @@ class CrudCommand extends Command
         $fieldsString = '';
         $relations = $fields->foreign_keys ?? null;
         foreach ($fields->fields as $field) {
-            $type = $field->type??null;
-            if(!$type){
+            $type = $field->type ?? null;
+            if (!$type) {
                 $this->error('Invalid Field Mark up');
                 $this->info("In $file");
                 dd($field);
@@ -432,12 +427,13 @@ class CrudCommand extends Command
         return $fieldsString;
     }
 
-    protected function addRoutes(){
+    protected function addRoutes()
+    {
         $tb = '    ';
         $routeName = Str::of($this->routeName)->lower()->snake();
         $routeVar = Str::of($this->routeName)->lower()->snake()->singular();
         return [
-"#$routeName
+            "#$routeName
  Route::name('{$this->routePrefix}.')->controller({$this->controller}::class)->group(function () {
     Route::get('/{$routeName}', 'index')->name('index');
     Route::get('/{$routeName}/create', 'create')->name('create');
@@ -516,7 +512,7 @@ class CrudCommand extends Command
         if (!isset($fields->relationships)) {
             return '';
         }
-        
+
         $relationsString = '';
         foreach ($fields->relationships as $relation) {
             $class = $relation->class ?? "";
@@ -596,7 +592,7 @@ class CrudCommand extends Command
             }
             if (
                 (Str::contains($field->type, 'select')
-                || Str::contains($field->type, 'enum'))
+                    || Str::contains($field->type, 'enum'))
                 && isset($field->options)
             ) {
                 $options = json_decode(json_encode($field->options), true);
@@ -648,5 +644,4 @@ class CrudCommand extends Command
         }
         return $castsFields;
     }
-    
 }
