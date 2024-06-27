@@ -1,35 +1,39 @@
 {
     "config": {
-         "name": "default",
-         "folder": "crud/",
-         "form-helper": "html",
-         "model-namespace": "Models",
-         "soft-deletes": true,
-         "controller-namespace":null,
-         "pk": "id",
-         "pagination": 25,
-         "route-group": null,
-         "force": false,
-         "inertia": false,
-         "locales": "en",
-         "only": "all"
+        "only": "migration",
+        "primaryKey": "id",
+        "softdeletes": false
     },
-	"fields": [
-		
-		{
-			"name": "name",
-			"type": "string",
-			"rules": "required|string"
-		},
-		{
-			"name": "email",
-			"type": "timestamp|nullable",
+    
+    "fields": [
+        {
+            "name": "name",
+            "type": "string",
+            "fillable": false,
+            "rules": "required|string"
+        },
+        {
+            "name": "email",
+            "type": "timestamp|nullable",
             "rules": "required|string|unique"
-		},
+        },
         {
             "name": "email_verified_at",
             "type": "string|nullable"
-        }, {
+        },
+        {
+            "name": "email_verified_at",
+            "type": "string|default:true"
+        },
+        {
+            "name": "password",
+            "type": "string",
+            "rules": [
+                "required",
+                ""
+            ]
+        },
+        {
             "name": "password",
             "type": "string",
             "rules": "required|string"
@@ -45,6 +49,24 @@
             "name": "profile_photo_path",
             "type": "string|nullable"
         }
-	]
-
+    ],
+    "index": [
+        "profile_photo_path",
+        [
+            "name",
+            "email"
+        ]
+    ],
+    "relationships": [
+        {
+            "name": "posts",
+            "type": "hasMany",
+            "class": "Post|user_id|id"
+        },
+        {
+            "name": "groups",
+            "type": "belongsToMany|withPivot:name,date|as:subscription",
+            "class": "Post|user_id|id"
+        }
+    ]
 }

@@ -1,7 +1,7 @@
 <?php
 
-namespace {{ enumNamespace }};
-enum {{ enum }}: string
+namespace {{enumNamespace}};
+enum {{enum}}: string
 {
 {{cases}}
 }

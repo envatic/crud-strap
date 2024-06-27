@@ -17,14 +17,13 @@ class DummyClass extends Controller
     {
         $keyword = $request->get('search');
         $perPage = {{pagination}};
+        $query  = {{modelName}}::query(){{relationsList}};
         if (!empty($keyword)) {
-            ${{crudName}}Items  = {{modelName}}::{{relationsList}}{{whereSnippet}}latest()->paginate($perPage);
-        } else {
-            ${{crudName}}Items = {{modelName}}::{{relationsList}}latest()->paginate($perPage);
-        }
+            $query->{{whereSnippet}};
+        } 
+        ${{crudName}}Items = $query->latest()->paginate($perPage);
         ${{crudName}} = {{modelName}}Resource::collection(${{crudName}}Items);
-{{relatedModels}}
-        return Inertia::render('{{viewPath}}{{viewName}}/Index', compact('{{crudName}}'{{relatedModelsItems}}));
+        return Inertia::render('{{viewPath}}{{viewName}}/Index', compact('{{crudName}}'));
     }
 
     /**
@@ -33,8 +32,7 @@ class DummyClass extends Controller
      */
     public function create()
     {
-{{relatedModels}}
-        return Inertia::render('{{viewPath}}{{viewName}}/Create', compact('{{crudName}}'{{relatedModelsItems}}));
+        return Inertia::render('{{viewPath}}{{viewName}}/Create');
     }
 
     /**
@@ -45,9 +43,9 @@ class DummyClass extends Controller
     public function store(Request $request )
     {
         {{validationRules}}
-        {{fileSnippet}}
         ${{crudNameSingular}} = new {{modelName}};
-{{saveable}}
+        {{saveable}}
+        {{fileSnippet}}
         return redirect()->route('{{routePrefix}}{{crudName}}.index')->with('success', '{{modelName}} added!');
     }
 
@@ -58,9 +56,9 @@ class DummyClass extends Controller
      */
     public function show(Request $request , $id)
     {
-        ${{crudNameSingular}} = {{modelName}}::{{relationsList}}findOrFail($id);
-        ${{crudNameSingular}}Resource = new {{modelName}}Resource(${{crudNameSingular}});
-        return Inertia::render('{{viewPath}}{{viewName}}/Show', compact('{{crudNameSingular}}Resource'));
+        ${{crudNameSingular}}Model = {{modelName}}::query(){{relationsList}}->findOrFail($id);
+        ${{crudNameSingular}} = new {{modelName}}Resource(${{crudNameSingular}}Model);
+        return Inertia::render('{{viewPath}}{{viewName}}/Show', compact('{{crudNameSingular}}'));
     }
 
     /**
@@ -70,10 +68,9 @@ class DummyClass extends Controller
      */
     public function edit(Request $request , $id)
     {
-        ${{crudNameSingular}} = {{modelName}}::findOrFail($id);
-{{relatedModels}}
-        ${{crudNameSingular}}Resource = new {{modelName}}Resource(${{crudNameSingular}});
-        return Inertia::render('{{viewPath}}{{viewName}}/Edit', compact('{{crudNameSingular}}Resource'));
+        ${{crudNameSingular}}Model = {{modelName}}::findOrFail($id);
+        ${{crudNameSingular}} = new {{modelName}}Resource(${{crudNameSingular}}Model);
+        return Inertia::render('{{viewPath}}{{viewName}}/Edit', compact('{{crudNameSingular}}'));
     }
 
     /**

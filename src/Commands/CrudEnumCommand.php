@@ -1,18 +1,17 @@
 <?php
 
 namespace Envatic\CrudStrap\Commands;
-use Illuminate\Console\GeneratorCommand;
+
 use Illuminate\Support\Str;
 
-class CrudEnumCommand extends GeneratorCommand
+class CrudEnumCommand extends BaseCrud
 {
 
 
     protected $signature = 'crud:enum
                             {name : The name of the model.}
-                            {--model= : The name of the model.}
-                            {--f|force : Force delete.}
-                            {--enum= : The Field Data.}';
+                            {--cases= : The Field Data.}
+                            {--f|force : Force delete.}';
 
     /**
      * The console command description.
@@ -64,21 +63,12 @@ class CrudEnumCommand extends GeneratorCommand
     protected function buildClass($name)
     {
         $stub = $this->files->get($this->getStub());
-        $data = str_replace('options=', '', $this->option('enum'));
+        $cases = $this->option('cases');
         $name = $this->argument('name');
-        $enum = class_basename(Str::ucfirst($name));
         $namespace = 'App\\Enums';
-        $cases = "";
-        $fields = json_decode($data, true);
-        foreach ($fields as $key => $field) {
-            $name = Str::of($key)->replace(['-', '_', ':'], "_")->upper();
-            $value = $key;
-            $cases .= "\tcase {$name} = '{$value}';\n";
-        }
         $replace = [
-            '{{ enumNamespace }}' => $namespace,
-            '{{ enum }}' => $enum,
-            '{{enum}}' => $enum,
+            '{{enumNamespace}}' => $namespace,
+            '{{enum}}' => $name,
             '{{cases}}' => $cases
         ];
         return str_replace(

@@ -1,5 +1,0 @@
-<BooleanToggle
-	v-model="form.%%itemName%%"
-    :error="form.error.%%itemName%%"
-	label="%%itemName%%"
-/>

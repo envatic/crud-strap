@@ -1,10 +1,12 @@
 <?php
 
 namespace Envatic\CrudStrap\Commands;
-use Illuminate\Console\GeneratorCommand;
+
+use Envatic\CrudStrap\Fields\Field;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-class CrudMigrationCommand extends GeneratorCommand
+
+class CrudMigrationCommand extends BaseCrud
 {
     /**
      * The name and signature of the console command.
@@ -13,21 +15,16 @@ class CrudMigrationCommand extends GeneratorCommand
      */
     protected $signature = 'crud:migration
                             {name : The name of the migration.}
-                            {--schema= : The name of the schema.}
-                            {--indexes= : The fields to add an index to.}
-                            {--foreign-keys= : Foreign keys.}
-                            {--pk=id: The name of the primary key.}
-                            {--uuid-pk: Use UUId primary key?.}
-                            {--f|force : Force delete.}
-                            {--prefix= : Used to check if crude is complete.}
-                            {--soft-deletes : Include soft deletes fields.}';
+                            {theme : config theme for the migration.}
+                            {crud: Crud json data}
+                            {--prefix= : optional timestamp prefix}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create a new migration.';
+    protected $description = 'Creates a new migration file';
 
     /**
      * The type of class being generated.
@@ -35,97 +32,6 @@ class CrudMigrationCommand extends GeneratorCommand
      * @var string
      */
     protected $type = 'Migration';
-
-    /**
-     *  Migration column types collection.
-     *
-     * @var array
-     */
-
-    protected $typeLookup = [
-        'datetime' => 'dateTime',
-        'mediumtext' => 'mediumText',
-        'longtext' => 'longText',
-        'bigint' => 'bigInteger',
-        'mediumint' => 'mediumInteger',
-        'tinyint' => 'tinyInteger',
-        'smallint' => 'smallInteger',
-        'bigIncrements' => 'bigIncrements',
-        'bigInteger' => 'bigInteger',
-        'binary' => 'binary',
-        'boolean' => 'boolean',
-        'char' => 'char',
-        'dateTimeTz' => 'dateTimeTz',
-        'dateTime' => 'dateTime',
-        'date' => 'date',
-        'decimal' => 'decimal',
-        'double' => 'double',
-        'enum' => 'enum',
-        'float' => 'float',
-        'foreignId' => 'foreignId',
-        'foreignIdFor' => 'foreignIdFor',
-        'foreignUuid' => 'foreignUuid',
-        'geometryCollection' => 'geometryCollection',
-        'geometry' => 'geometry',
-        'id' => 'id',
-        'increments' => 'increments',
-        'integer' => 'integer',
-        'ipAddress' => 'ipAddress',
-        'json' => 'json',
-        'jsonb' => 'jsonb',
-        'lineString' => 'lineString',
-        'longText' => 'longText',
-        'macAddress' => 'macAddress',
-        'mediumIncrements' => 'mediumIncrements',
-        'mediumInteger' => 'mediumInteger',
-        'mediumText' => 'mediumText',
-        'morphs' => 'morphs',
-        'multiPoint' => 'multiPoint',
-        'multiPolygon' => 'multiPolygon',
-        'nullableMorphs' => 'nullableMorphs',
-        'nullableTimestamps' => 'nullableTimestamps',
-        'nullableUuidMorphs' => 'nullableUuidMorphs',
-        'point' => 'point',
-        'polygon' => 'polygon',
-        'rememberToken' => 'rememberToken',
-        'set' => 'set',
-        'smallIncrements' => 'smallIncrements',
-        'smallInteger' => 'smallInteger',
-        'softDeletesTz' => 'softDeletesTz',
-        'softDeletes' => 'softDeletes',
-        'string' => 'string',
-        'text' => 'text',
-        'timeTz' => 'timeTz',
-        'time' => 'time',
-        'timestampTz' => 'timestampTz',
-        'timestamp' => 'timestamp',
-        'timestampsTz' => 'timestampsTz',
-        'timestamps' => 'timestamps',
-        'tinyIncrements' => 'tinyIncrements',
-        'tinyInteger' => 'tinyInteger',
-        'tinyText' => 'tinyText',
-        'unsignedBigInteger' => 'unsignedBigInteger',
-        'unsignedDecimal' => 'unsignedDecimal',
-        'unsignedInteger' => 'unsignedInteger',
-        'unsignedMediumInteger' => 'unsignedMediumInteger',
-        'unsignedSmallInteger' => 'unsignedSmallInteger',
-        'unsignedTinyInteger' => 'unsignedTinyInteger',
-        'uuidMorphs' => 'uuidMorphs',
-        'uuid' => 'uuid',
-        'year' => 'year',
-    ];
-
-    protected $migrated = [
-        'name',
-        'email',
-        'email_verified_at',
-        'password',
-        'current_team_id',
-        'profile_photo_path',
-        'timestamps',
-        'rememberToken'
-    ];
-
     /**
      * Execute the console command.
      *
@@ -135,11 +41,20 @@ class CrudMigrationCommand extends GeneratorCommand
      */
     public function handle()
     {
-        $isExists = $this->migrationExists($this->getNameInput());
-        if ((!$this->hasOption('force') ||
-            !$this->option('force'))
-            && $isExists
-        ) {
+        $migration = 'Create' . strtolower($this->getNameInput()) . '_table';
+        $filesNames = File::files(base_path() . '/database/migrations/');
+        $exists = false;
+        foreach ($filesNames as $file) {
+            if (Str::contains($file->getFilename(),  $migration)) {
+                $exists = $file->getFilename();
+                if ($this->option('force')) {
+                    File::delete($file->getPathname());
+                    $this->warn('Migration deleted:' . $file->getFilename());
+                    $exists = false;
+                }
+            }
+        }
+        if ($exists) {
             $this->error($this->type . ' already exists!');
             return false;
         }
@@ -154,8 +69,8 @@ class CrudMigrationCommand extends GeneratorCommand
     protected function getStub()
     {
         return config('crudstrap.custom_template')
-        ? config('crudstrap.path') . '/migration.stub'
-        : __DIR__ . '/../stubs/migration.stub';
+            ? config('crudstrap.path') . '/migration.stub'
+            : __DIR__ . '/../stubs/migration.stub';
     }
 
 
@@ -168,246 +83,14 @@ class CrudMigrationCommand extends GeneratorCommand
      */
     protected function buildClass($name)
     {
-
         $stub = $this->files->get($this->getStub());
-        $tableName = $this->argument('name');
-        $exists = $this->migrationFile(strtolower($tableName));
-        $isUser = strtolower($tableName) == 'users';
-        $type = $isUser && $exists ? 'Update' : 'Create';
-        $className = $type . str_replace(' ', '', ucwords(str_replace('_', ' ', $tableName))) . 'Table';
-        $fieldsToIndex = trim($this->option('indexes')) != '' ? explode(',', $this->option('indexes')) : [];
-        $foreignKeys = trim($this->option('foreign-keys')) != '' ? explode(',', $this->option('foreign-keys')) : [];
-        $schema = rtrim($this->option('schema'), ';');
-        $fields = explode(';', $schema);
-        $data = array();
-        if ($schema) {
-            $x = 0;
-            foreach ($fields as $field) {
-                $fieldArray = explode('#', $field);
-                $data[$x]['name'] = trim($fieldArray[0]);
-                $modifications = explode('|', $fieldArray[1]);
-                $type = array_shift($modifications);
-                $data[$x]['type'] = $type;
-                if ((Str::startsWith($type, 'select') || Str::startsWith($type, 'enum')) && isset($fieldArray[2])) {
-                    $options = trim($fieldArray[2]);
-                    $data[$x]['options'] = str_replace('options=', '', $options);
-                }
-                //string:30|default:'ofumbi'|nullable
-                $data[$x]['modifiers'] = [];
-                if (count($modifications)) {
-                    $modifierLookup = [
-                        'comment',
-                        'default',
-                        'first',
-                        'nullable',
-                        'unsigned',
-                        'unique',
-                        'charset',
-                        'useCurrent',
-                        'constrained',
-                        'onDelete',
-                        'onUpdate',
-                    ];
-                    foreach ($modifications as $modification) {
-                        $variables = explode(':', $modification);
-                        $modifier =   array_shift($variables);
-                        if (!in_array(trim($modifier), $modifierLookup)) continue;
-                        $vars = $variables[0] ?? "";
-                        $data[$x]['modifiers'][] = "->" . trim($modifier) . "(" . $vars . ")";
-                    }
-                }
-                $x++;
-            }
-        }
-
-        $tabIndent = '    ';
-        $schemaFields = '';
-        $schemaDropFields = '';
-        foreach ($data as $item) {
-            $data_type = explode(':', $item['type']);
-            $item_type = array_shift($data_type);
-            if (
-                $isUser
-                && in_array(trim($item['name']), $this->migrated)
-                || in_array(trim($item_type), $this->migrated)
-            ) {
-                continue;
-            }
-            $variables = isset($data_type[0]) ? "," . $data_type[0] : "";
-            $schemaDrop = "\$table->dropColumn('{$item['name']}')";
-            $schemaDropForiegn = "\$table->dropForeign(['{$item['name']}']);";
-            $schemaDropFields .= in_array($item_type, ['foreignId', 'foreignIdFor', 'foreignUuid',])
-            ? $schemaDropForiegn
-                : $schemaDrop;
-            if (isset($this->typeLookup[$item_type])) {
-                $type = $this->typeLookup[$item_type];
-                if (!empty($item['options'])) {
-                    $enumOptions = array_keys(json_decode($item['options'], true));
-                    $enumOptionsStr = implode(",", array_map(function ($string) {
-                        return '"' . $string . '"';
-                    }, $enumOptions));
-                    $schemaFields .= "\$table->enum('" . $item['name'] . "', [" . $enumOptionsStr . "])";
-                } elseif ($item['name'] == "uuid") {
-                    $schemaFields .= "\$table->uuid('" . $item['name'] . "')";
-                } else {
-                    $schemaFields .= "\$table->" . $type . "('" . $item['name'] . "'" . $variables . ")";
-                }
-            } else {
-                if (isset($item['options']) && $item['options']) {
-                    $enumOptions = array_keys(json_decode($item['options'], true));
-                    $enumOptionsStr = implode(",", array_map(function ($string) {
-                        return '"' . $string . '"';
-                    }, $enumOptions));
-                    $schemaFields .= "\$table->enum('" . $item['name'] . "', [" . $enumOptionsStr . "])";
-                } elseif ($item['name'] == "uuid") {
-                    $schemaFields .= "\$table->uuid('" . $item['name'] . "')";
-                } else {
-                    $schemaFields .= "\$table->string('" . $item['name'] . "'" . $variables . ")";
-                }
-            }
-
-            // Append column modifier
-            $schemaFields .= implode("", $item['modifiers']);
-            $schemaFields .= ";\n" . $tabIndent . $tabIndent . $tabIndent;
-            $schemaDropFields .= ";\n" . $tabIndent . $tabIndent . $tabIndent;
-        }
-
-        // add indexes and unique indexes as necessary
-        foreach ($fieldsToIndex as $fldData) {
-            $line = trim($fldData);
-
-            // is a unique index specified after the #?
-            // if no hash present, we append one to make life easier
-            if (strpos($line, '#') === false) {
-                $line .= '#';
-            }
-
-            // parts[0] = field name (or names if pipe separated)
-            // parts[1] = unique specified
-            $parts = explode('#', $line);
-            if (strpos($parts[0], '|') !== 0) {
-                $fieldNames = "['" . implode("', '", explode('|', $parts[0])) . "']"; // wrap single quotes around each element
-            } else {
-                $fieldNames = trim($parts[0]);
-            }
-
-            if (count($parts) > 1 && $parts[1] == 'unique') {
-                $schemaFields .= "\$table->unique(" . trim($fieldNames) . ")";
-            } else {
-                $schemaFields .= "\$table->index(" . trim($fieldNames) . ")";
-            }
-            $schemaFields .= ";\n" . $tabIndent . $tabIndent . $tabIndent;
-        }
-
-        // foreignKeysField
-        $foreignKeysFields = "";
-        foreach ($foreignKeys as $fk) {
-            $line = trim($fk);
-            $parts = explode('#', $line);
-            // if we don't have three parts, then the foreign key isn't defined properly
-            // --foreign-keys="foreign_entity_id#id#foreign_entity#onDelete#onUpdate"
-            $iname = trim($parts[0]);
-            if (count($parts) == 3) {
-                $schemaDropFields = "\$table->dropForeign(['{$iname}']);";
-                $foreignKeysFields .= "\$table->foreign('" . trim($parts[0]) . "')"
-                    . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) .
-                "');" . "\n" . $tabIndent . $tabIndent. $tabIndent;;
-            } elseif (count($parts) == 4) {
-                $schemaDropFields = "\$table->dropForeign(['{$iname}']);";
-                $foreignKeysFields .= "\$table->foreign('" . trim($parts[0]) . "')"
-                    . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')"
-                    . "->onDelete('" . trim($parts[3]) . "')" . "->onUpdate('" . trim($parts[3]) .
-                "');" . "\n" . $tabIndent . $tabIndent. $tabIndent;;
-            } elseif (count($parts) == 5) {
-                $schemaDropFields = "\$table->dropForeign(['{$iname}']);";
-                $foreignKeysFields .= "\$table->foreign('" . trim($parts[0]) . "')"
-                    . "->references('" . trim($parts[1]) . "')->on('" . trim($parts[2]) . "')"
-                    . "->onDelete('" . trim($parts[3]) . "')" . "->onUpdate('" . trim($parts[4]) . "');" . "\n" . $tabIndent . $tabIndent. $tabIndent;
-            } else {
-                continue;
-            }
-        }
-
-    
-        $foreignKeysFields .=  "\n" . $tabIndent . $tabIndent;
-        $primaryKey = $this->option('pk');
-        $softDeletes = $this->option('soft-deletes');
-        $softDeletesSnippets = '';
-        if ($softDeletes) {
-            $softDeletesSnippets = "\$table->softDeletes();\n" . $tabIndent . $tabIndent . $tabIndent;
-            $softDeletesDropSnippets = "\$table->dropSoftDeletes();\n" . $tabIndent . $tabIndent . $tabIndent;
-        }
-        $schema_type = $isUser ? 'table' : 'create';
-        $schemaDrop =
-            "Schema::table('" . $tableName . "', function (Blueprint \$table) { \n" . $tabIndent . $tabIndent . $tabIndent .
-            $schemaDropFields .
-            $softDeletesDropSnippets . "\n" . $tabIndent . $tabIndent . "});";
-        $creatSchemaUp = "Schema::create('" . $tableName . "', function (Blueprint \$table) { \n" . $tabIndent . $tabIndent . $tabIndent .
-            "\$table->bigIncrements('" . $primaryKey . "');\n" . $tabIndent . $tabIndent . $tabIndent .
-            $schemaFields . "\$table->timestamps();\n" . $tabIndent . $tabIndent . $tabIndent .
-            $softDeletesSnippets .
-            substr($foreignKeysFields, 0, -1) . "});";
-        $updateSchemaUp = "Schema::table('" . $tableName . "', function (Blueprint \$table) { \n" . $tabIndent . $tabIndent . $tabIndent .
-            $schemaFields .
-            $softDeletesSnippets .
-            substr($foreignKeysFields, 0, -1) . "});";
-        $schemaDown = $isUser
-            ? $schemaDrop
-            : "Schema::drop('" . $tableName . "');";
-        $schemaUp = $isUser ? $updateSchemaUp : $creatSchemaUp;
-        return $this->replaceSchemaUp($stub, $schemaUp)
-            ->replaceSchemaDown($stub, $schemaDown)
+        $tableName = $this->getNameInput();
+        $className = 'Create' . str_replace(' ', '', ucwords(str_replace('_', ' ', $tableName))) . 'Table';
+        return $this->replaceSchemaUp($stub)
+            ->replaceSchemaDown($stub)
             ->replaceClass($stub, $className);
     }
 
-    /**
-     * Determine if the class already exists.
-     *
-     * @param  string  $rawName
-     * @return bool
-     */
-    protected function migrationExists($rawName)
-    {
-        $is_user =  strtolower($rawName)  == 'users';
-        $exist = $this->migrationFile($rawName);
-        $type = $is_user && $exist ? 'update_' : 'create_';
-        $migration = $type  . strtolower($rawName) . '_table';
-        $filesNames = File::files(base_path() . '/database/migrations/');
-        $exists = false;
-        foreach ($filesNames as $file) {
-            if (Str::contains($file->getFilename(),  $migration)) {
-                $exists = $file->getFilename();
-                if ($this->option('force')) {
-                    File::delete($file->getPathname());
-                    $this->warn('Migration deleted:' . $file->getFilename());
-                    $exists = false;
-                }
-            }
-        }
-        if ($exists) {
-            $this->warn('Migration File Found: ' . $exists);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Determine if the class already exists.
-     *
-     * @param  string  $rawName
-     * @return bool
-     */
-    protected function migrationFile($rawName)
-    {
-        $migration = 'create_' . strtolower($rawName) . '_table';
-        $filesNames = File::files(base_path() . '/database/migrations/');
-        foreach ($filesNames as $file) {
-            if (Str::contains($file->getFilename(),  $migration)) {
-                return true;
-            }
-        }
-        return false;
-    }
     /**
      * Get the destination class path.
      *
@@ -418,13 +101,16 @@ class CrudMigrationCommand extends GeneratorCommand
     protected function getPath($name)
     {
         $name = str_replace($this->laravel->getNamespace(), '', $name);
-        $exists = $this->migrationFile($name);
-        $type = $name == 'users' && $exists ? '_update_' : '_create_';
-        $ms = microtime(true);
-        $mst = Str::of($ms)->explode('.')->all();
-        $sss = $mst[1] ?? 0000;
-        $datePrefix = date('Y_m_d_His');
-        $nameTime = $this->option('prefix') ?? $datePrefix . $sss;
+        $type =  '_create_';
+        $nameTime = value(function () {
+            if (!empty($this->option('prefix')))
+                return $this->option('prefix');
+            $ms = microtime(true);
+            $mst = Str::of($ms)->explode('.')->all();
+            $sss = $mst[1] ?? 0000;
+            $datePrefix = date('Y_m_d_His');
+            return $datePrefix . $sss;
+        });
         return database_path('/migrations/') . $nameTime . $type . $name . '_table.php';
     }
     /**
@@ -435,10 +121,21 @@ class CrudMigrationCommand extends GeneratorCommand
      *
      * @return $this
      */
-    protected function replaceSchemaUp(&$stub, $schemaUp)
+    protected function replaceSchemaUp(&$stub)
     {
+        $tableName = $this->crud->tableName();
+        $schemaFields = $this->dbSchemaString();
+        if (count($this->crud->indexes()) > 0) {
+            $schemaFields .= $this->dbIndexesString();
+        }
+        $softDeletesSnippets = $this->config->softdeletes
+            ? "\t\t\t\$table->softDeletes();\n\t\t"
+            : "\t\t";
+        $schemaUp = "Schema::create('" . $tableName . "', function (Blueprint \$table) { \n\t\t\t" .
+            "\$table->bigIncrements('" . $this->config->primaryKey . "');\n\t\t\t" .
+            $schemaFields . "\$table->timestamps();\n" .
+            $softDeletesSnippets . "});";
         $stub = str_replace('{{schema_up}}', $schemaUp, $stub);
-
         return $this;
     }
 
@@ -450,10 +147,36 @@ class CrudMigrationCommand extends GeneratorCommand
      *
      * @return $this
      */
-    protected function replaceSchemaDown(&$stub, $schemaDown)
+    protected function replaceSchemaDown(&$stub)
     {
+        $tableName = $this->crud->tableName();
+        $schemaDown = "Schema::drop('" . $tableName . "');";
         $stub = str_replace('{{schema_down}}', $schemaDown, $stub);
-
         return $this;
+    }
+
+    protected function dbSchemaString()
+    {
+        return  $this->crud->fields
+            ->map(function (Field $field) {
+                if (!$this->config->has('enums') && $field->type()->isEnum()) {
+                    $migration = "\$table->enum('" .  $field->name() . "',[" . $field->options()->getDatabaseEnums() . "])";
+                    $migration .= $field->type()->getMigrationModifiers();
+                    $migration .= ";\n";
+                    return $migration;
+                }
+                return $field->type()->getMigration();
+            })
+            ->implode("\t\t\t");
+    }
+
+    protected function dbIndexesString()
+    {
+        return collect($this->crud->indexes())->map(function ($index) {
+            if (is_string($index)) return "\$table->index(" . trim($index) . ")\n";
+            if (is_array($index))
+                return "\$table->index(" . implode(", ", $index) . ")\n";
+        })
+            ->implode("\t\t\t");
     }
 }

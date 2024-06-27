@@ -2,10 +2,14 @@
 
 namespace Envatic\CrudStrap\Commands;
 
-use Illuminate\Console\GeneratorCommand;
+use Envatic\CrudStrap\Crud;
+use Envatic\CrudStrap\CrudConfig;
+use Envatic\CrudStrap\CrudFile;
+use Envatic\CrudStrap\Fields\Field;
+use Envatic\CrudStrap\Fields\Relation;
 use Illuminate\Support\Str;
 
-class CrudControllerCommand extends GeneratorCommand
+class CrudControllerCommand extends BaseCrud
 {
     /**
      * The name and signature of the console command.
@@ -14,19 +18,8 @@ class CrudControllerCommand extends GeneratorCommand
      */
     protected $signature = 'crud:controller
                             {name : The name of the controler.}
-                            {--crud-name= : The name of the Crud.}
-                            {--model-name= : The name of the Model.}
-                            {--model-namespace= : The namespace of the Model.}
-                            {--controller-namespace= : Namespace of the controller.}
-                            {--view-path= : The name of the view path.}
-                            {--fields= : Field names for the form & migration.}
-                            {--relationships= : RelationShips to Load Releated Models}
-                            {--validations= : Validation rules for the fields.}
-                            {--route-group= : Prefix of the route group.}
-                            {--pagination=25 : The amount of models per page for index pages.}
-                            {--force : Overwrite already existing controller.}
-							{--api : use api controller.}
-							{--inertia : use inertia controller.}';
+                            {theme : Config theme for this crud.}
+                            {crud : Crud json file.}';
 
     /**
      * The console command description.
@@ -43,86 +36,46 @@ class CrudControllerCommand extends GeneratorCommand
     protected $type = 'Controller';
 
     /**
+     * The config for this crud
+     *
+     * @var CrudConfig
+     */
+    protected CrudConfig $config;
+
+    /**
+     * The config for this crud
+     *
+     * @var CrudFile
+     */
+    protected CrudFile $crud;
+
+
+
+
+    /**
      * Get the stub file for the generator.
      *
      * @return string
      */
     protected function getStub()
     {
-        $api = $this->option('api');
-        $inertia = $this->option('inertia');
-        if (!$api && !$inertia) return $this->getNormalStub();
-        $stub = $inertia ? 'inertia' : 'api';
+
         return config('crudstrap.custom_template')
-        ? config('crudstrap.path') . '/' . $stub . '-controller.stub'
-        : __DIR__ . '/../stubs/' . $stub . '-controller.stub';
-    }
-
-    /**
-     * Get the stub file for the generator.
-     *
-     * @return string
-     */
-    protected function getNormalStub()
-    {
-        return config('crudstrap.custom_template')
-        ? config('crudstrap.path') . '/controller.stub'
-        : __DIR__ . '/../stubs/controller.stub';
-    }
-
-    /**
-     * Replace the javascript validationRules for the given stub.
-     *
-     * @param  string  $stub
-     * @param  string  $validationRules
-     *
-     * @return $this
-     */
-    protected function replaceJSValidation(&$stub, $jsvalidation)
-    {
-        $stub = str_replace('{{jsvalidator}}', $jsvalidation, $stub);
-        return $this;
-    }
-
-    protected function replaceSaveable(&$stub, $saveable)
-    {
-        $stub = str_replace('{{saveable}}', $saveable, $stub);
-        return $this;
+            ? config('crudstrap.path') . '/inertia-controller.stub'
+            : __DIR__ . '/../stubs/inertia-controller.stub';
     }
 
 
-    protected function replaceRelatedModels(&$stub, $relatedModels, $relatedModelsItems)
-    {
-        $stub = str_replace(['{{relatedModels}}', '{{relatedModelsItems}}'], [$relatedModels, $relatedModelsItems], $stub);
-        return $this;
-    }
 
-
-    protected function replaceCrudNameCaps(&$stub, $crudNameCaps)
-    {
-        $stub = str_replace('{{crudNameCaps}}', $crudNameCaps, $stub);
-        return $this;
-    }
-    protected function replaceUseItems(&$stub, $useItems)
-    {
-        $stub = str_replace('{{useItems}}', $useItems, $stub);
-        return $this;
-    }
-    protected function replaceRelationsList(&$stub, $relationsList)
-    {
-        $stub = str_replace('{{relationsList}}', $relationsList, $stub);
-        return $this;
-    }
     /**
      * Get the default namespace for the class.
      *
      * @param  string $rootNamespace
-     *
      * @return string
      */
-    protected function getDefaultNamespace($rootNamespace)
+    protected function getDefaultNamespace($rootNamespace): string
     {
-        return $rootNamespace . '\\' . ($this->option('controller-namespace') ? $this->option('controller-namespace') : 'Http\Controllers');
+        return $rootNamespace . '\\' .  $this->config->controllerNamespace;
     }
 
     /**
@@ -133,153 +86,46 @@ class CrudControllerCommand extends GeneratorCommand
      */
     protected function alreadyExists($rawName)
     {
-        if ($this->option('force')) {
+        if ($this->config->force) {
             return false;
         }
         return parent::alreadyExists($rawName);
     }
+
+
     protected function buildClass($name)
     {
-        $cname = Str::of($this->option('crud-name'));
-        $stub = $this->files->get($this->getStub());
-        $view = $this->option('view-path');
-        $crudName = $cname->lower();
-        $crudNameCaps = $cname->lower()->ucfirst();
-        $crudNameSingular = $crudName->singular();
-        $modelName = $this->option('model-name');
-        $relationships = $this->option('relationships');
-        $modelNamespace = $this->option('model-namespace');
-        $modelNamespaced = $this->option('model-namespace');
-        $routeGroup = ($this->option('route-group')) ? $this->option('route-group') . '/' : '';
-        $routePrefix = ($this->option('route-group')) ? $this->option('route-group').'.' : '';
-        $routePrefixCap = ucfirst($routePrefix);
-        $perPage = intval($this->option('pagination'));
-        $viewName = $cname->snake('-')->ucfirst();
-        $routeViewName = $viewName->lower();
-        $fields = $this->option('fields');
-        $validations = rtrim($this->option('validations'), ';');
-        $viewPath = $view ? Str::of($view)->ucfirst() . "/" : "";
-        $validationRules = '';
-        $jsvalidation = '';
-        $relationsListItems = '';
-        $relationsList = '';
-        $saveable = '';
-        $useItems = "";
-        if (trim($relationships)) {
-            $relations = explode(';', $relationships);
-            foreach ($relations as $r) {
-                if (trim($r) == '') continue;
-                $parts = explode('#', $r);
-                $xname = trim($parts[0]);
-                $relationsListItems .= ",'{$xname}'";
-            }
-            $relationsListItems = trim($relationsListItems, ',');
-        }
-
-        if ($relationsListItems != '') {
-            $relationsList = "with([{$relationsListItems}])->";
-        }
-        if (trim($validations) != '') {
-            $validationRules = "\$request->validate([";
-            $rules = explode(';', $validations);
-            $xrules = '';
-            foreach ($rules as $v) {
-                if (trim($v) == '') continue;
-                // extract field name and args
-                $parts = explode('#', $v);
-                $fieldName = trim($parts[0]);
-                $rules = trim($parts[1]);
-                $xrules .= "\n\t\t\t'$fieldName' => '$rules',";
-            }
-            $validationRules .= substr($xrules, 0, -1); // lose the last comma
-            $validationRules .= "\n\t\t]);";
-            $jsvalidation    = "\$jsvalidator = JsValidator::make([";
-            $jsvalidation .= substr($xrules, 0, -1); // lose the last comma again
-            $jsvalidation .= "\n\t\t]);";
-           
-        }
-
-
-
-        if (app()->version() < '5.3') {
-            $snippet = <<<EOD
-        if (\$request->hasFile('{{fieldName}}')) {
-            \$file = \$request->file('{{fieldName}}');
-            \$fileName = Str::random(40) . '.' . \$file->getClientOriginalExtension();
-            \$destinationPath = storage_path('/app/public/uploads');
-            \$file->move(\$destinationPath, \$fileName);
-            \$requestData['{{fieldName}}'] = 'uploads/' . \$fileName;
-        }
-EOD;
-        } else {
-            $snippet = <<<EOD
-        if (\$request->hasFile('{{fieldName}}')) {
-            \$requestData['{{fieldName}}'] = \$request->file('{{fieldName}}')
-                ->store('uploads', 'public');
-        }
-EOD;
-        }
-
-
-        $fieldsArray = explode(';', $fields);
-        $fileSnippet = '';
-        $whereSnippet = '';
-        $relatedModels = "";
-        $relatedModelsItems = "";
-        if ($fields) {
-            $x = 0;
-            foreach ($fieldsArray as $index => $item) {
-                $itemArray = explode('#', $item);
-                // some fields are just for db only eg rememberToken
-                if (empty($itemArray[0])) continue;
-                // remove migration modifiers string:16|nullable , 
-                if (Str::contains($itemArray[1], ':') || Str::contains($itemArray[1], '|')) {
-                    $types = explode('|', str_replace(':', "|", $itemArray[1]));
-                    $type = $types[0];
-                } else {
-                    $type = $itemArray[1];
-                }
-
-                if ((trim($type) != 'select' || trim($type) != 'enum') &&  trim($type) == 'foreignId' && isset($itemArray[2])) {
-                    $relmod = Str::of(str_replace("options=", "", $itemArray[2]))->ucfirst();
-                    $useItems .= "\nuse App\\{$modelNamespaced}{$relmod};";
-                    //$useItems .= "\nuse App\\Http\\Resources\\{$relmod} as {$relmod}Resource;";
-                    //$relatedModels .= "\${$relmod->lower()}s = {$relmod}Resource::collection($relmod::all());";
-                    $relatedModels .= "\t\t\${$relmod->lower()}s = $relmod::pluck('id','name')->all();\n";
-                    $relatedModelsItems .= ",'{$relmod->lower()}s'";
-                }
-                if (trim($type) == 'file') {
-                    $fileSnippet .= str_replace('{{fieldName}}', trim($itemArray[0]), $snippet) . "\n";
-                }
-                $fieldName = trim($itemArray[0]);
-                $saveable .= "\n\t\t$" . "{$crudNameSingular}->{$fieldName} = \$request->{$fieldName};";
-                $whereSnippet .= ($index == 0) ? "where('$fieldName', 'LIKE', \"%\$keyword%\")" . "\n                " : "->orWhere('$fieldName', 'LIKE', \"%\$keyword%\")" . "\n                ";
-            }
-            $whereSnippet .= "->";
-            $saveable .= "\n\t\t$" . $crudNameSingular . "->save();";
-        }
         return $this->replaceNamespace($stub, $name)
-            ->replaceViewPath($stub, $viewPath)
-            ->replaceViewName($stub, $viewName)
-            ->replaceCrudName($stub, $crudName)
-            ->replaceCrudNameSingular($stub, $crudNameSingular)
-            ->replaceCrudNameCaps($stub, $crudNameCaps)
-            ->replaceModelName($stub, $modelName)
-            ->replaceModelNamespace($stub, $modelNamespace)
-            ->replaceModelNamespaceSegments($stub, $modelNamespace)
-            ->replaceRouteGroup($stub, $routeGroup)
-            ->replaceRoutePrefix($stub, $routePrefix)
-            ->replaceRoutePrefixCap($stub, $routePrefixCap)
-            ->replaceValidationRules($stub, $validationRules)
-            ->replaceJSValidation($stub, $jsvalidation)
-            ->replaceRelatedModels($stub, $relatedModels, $relatedModelsItems)
-            ->replacePaginationNumber($stub, $perPage)
-            ->replaceFileSnippet($stub, $fileSnippet)
-            ->replaceWhereSnippet($stub, $whereSnippet)
-            ->replaceSaveable($stub, ltrim($saveable, "\n"))
-            ->replaceRelationsList($stub, $relationsList)
-            ->replaceUseItems($stub, $useItems)
+            ->replaceViewPath($stub)
+            ->replaceViewName($stub)
+            ->replaceCrudName($stub)
+            ->replaceCrudNameSingular($stub)
+            ->replaceCrudNameCaps($stub)
+            ->replaceModelName($stub)
+            ->replaceModelNamespace($stub)
+            ->replaceRouteGroup($stub)
+            ->replaceRoutePrefix($stub)
+            ->replaceValidationRules($stub)
+            ->replacePaginationNumber($stub)
+            ->replaceFileSnippet($stub)
+            ->replaceWhereSnippet($stub)
+            ->replaceSaveable($stub)
+            ->replaceRelationsList($stub)
+            ->replaceImports($stub)
             ->replaceClass($stub, $name);
+    }
+
+    /**
+     * Replace the viewPath for the given stub.
+     *
+     * @param  string  $stub
+     *
+     * @return $this
+     */
+    protected function replaceViewPath(&$stub)
+    {
+        $stub = str_replace('{{viewPath}}', $this->config->viewPath ?? "", $stub);
+        return $this;
     }
 
 
@@ -287,30 +133,17 @@ EOD;
      * Replace the viewName fo the given stub.
      *
      * @param string $stub
-     * @param string $viewName
      *
      * @return $this
      */
-    protected function replaceViewName(&$stub, $viewName)
+    protected function replaceViewName(&$stub)
     {
+        $viewName = $this->crud->viewName();
         $stub = str_replace('{{viewName}}', $viewName, $stub);
         return $this;
     }
 
-    /**
-     * Replace the viewPath for the given stub.
-     *
-     * @param  string  $stub
-     * @param  string  $viewPath
-     *
-     * @return $this
-     */
-    protected function replaceViewPath(&$stub, $viewPath)
-    {
-        $stub = str_replace('{{viewPath}}', $viewPath, $stub);
 
-        return $this;
-    }
 
     /**
      * Replace the crudName for the given stub.
@@ -320,8 +153,9 @@ EOD;
      *
      * @return $this
      */
-    protected function replaceCrudName(&$stub, $crudName)
+    protected function replaceCrudName(&$stub)
     {
+        $crudName = $this->crud->crudName();
         $stub = str_replace('{{crudName}}', $crudName, $stub);
 
         return $this;
@@ -335,10 +169,10 @@ EOD;
      *
      * @return $this
      */
-    protected function replaceCrudNameSingular(&$stub, $crudNameSingular)
+    protected function replaceCrudNameSingular(&$stub)
     {
+        $crudNameSingular = $this->crud->crudNameSingular();
         $stub = str_replace('{{crudNameSingular}}', $crudNameSingular, $stub);
-
         return $this;
     }
 
@@ -350,10 +184,26 @@ EOD;
      *
      * @return $this
      */
-    protected function replaceModelName(&$stub, $modelName)
+    protected function replaceModelName(&$stub)
     {
+        $modelName = $this->crud->modelName();
         $stub = str_replace('{{modelName}}', $modelName, $stub);
+        return $this;
+    }
 
+    /**
+     * Replace the CrudNameCaps for the given stub.
+     *
+     * @param  string  $stub
+     * @param  string  $modelName
+     *
+     * @return $this
+     */
+
+    protected function replaceCrudNameCaps(&$stub)
+    {
+        $crudNameCaps = $this->crud->crud_name->lower()->ucfirst();
+        $stub = str_replace('{{crudNameCaps}}', $crudNameCaps, $stub);
         return $this;
     }
 
@@ -365,60 +215,10 @@ EOD;
      *
      * @return $this
      */
-    protected function replaceModelNamespace(&$stub, $modelNamespace)
+    protected function replaceModelNamespace(&$stub)
     {
+        $modelNamespace = $this->config->modelNamespace;
         $stub = str_replace('{{modelNamespace}}', $modelNamespace, $stub);
-
-        return $this;
-    }
-
-    /**
-     * Replace the modelNamespace segments for the given stub
-     *
-     * @param $stub
-     * @param $modelNamespace
-     *
-     * @return $this
-     */
-    protected function replaceModelNamespaceSegments(&$stub, $modelNamespace)
-    {
-        $modelSegments = explode('\\', $modelNamespace);
-        foreach ($modelSegments as $key => $segment) {
-            $stub = str_replace('{{modelNamespace[' . $key . ']}}', $segment, $stub);
-        }
-
-        $stub = preg_replace('{{modelNamespace\[\d*\]}}', '', $stub);
-
-        return $this;
-    }
-
-    /**
-     * Replace the routePrefix for the given stub.
-     *
-     * @param  string  $stub
-     * @param  string  $routePrefix
-     *
-     * @return $this
-     */
-    protected function replaceRoutePrefix(&$stub, $routePrefix)
-    {
-        $stub = str_replace('{{routePrefix}}', $routePrefix, $stub);
-
-        return $this;
-    }
-
-    /**
-     * Replace the routePrefixCap for the given stub.
-     *
-     * @param  string  $stub
-     * @param  string  $routePrefixCap
-     *
-     * @return $this
-     */
-    protected function replaceRoutePrefixCap(&$stub, $routePrefixCap)
-    {
-        $stub = str_replace('{{routePrefixCap}}', $routePrefixCap, $stub);
-
         return $this;
     }
 
@@ -430,12 +230,39 @@ EOD;
      *
      * @return $this
      */
-    protected function replaceRouteGroup(&$stub, $routeGroup)
+    protected function replaceRouteGroup(&$stub)
     {
+        $routeGroup = $this->config->routeGroup
+            ? $this->config->routeGroup . '/'
+            : '';
         $stub = str_replace('{{routeGroup}}', $routeGroup, $stub);
 
         return $this;
     }
+
+
+
+    /**
+     * Replace the routePrefix for the given stub.
+     *
+     * @param  string  $stub
+     * @param  string  $routePrefix
+     *
+     * @return $this
+     */
+    protected function replaceRoutePrefix(&$stub)
+    {
+        $routePrefix = $this->config->routeGroup
+            ? $this->config->routeGroup . '.'
+            : '';
+        $stub = str_replace('{{routePrefix}}', $routePrefix, $stub);
+
+        return $this;
+    }
+
+
+
+
 
     /**
      * Replace the validationRules for the given stub.
@@ -445,10 +272,19 @@ EOD;
      *
      * @return $this
      */
-    protected function replaceValidationRules(&$stub, $validationRules)
+    protected function replaceValidationRules(&$stub)
     {
+        $validationRules = "";
+        $rules = $this->crud->fields->map(function (Field $field) {
+            if (!$field->rules()) return null; // skip empty rules
+            return  $field->validation();
+        })->filter();
+        if ($rules->count()) {
+            $validationRules = "\$request->validate([";
+            $validationRules .=  $rules->implode("");
+            $validationRules .= "\n\t\t]);";
+        }
         $stub = str_replace('{{validationRules}}', $validationRules, $stub);
-
         return $this;
     }
 
@@ -460,10 +296,10 @@ EOD;
      *
      * @return $this
      */
-    protected function replacePaginationNumber(&$stub, $perPage)
+    protected function replacePaginationNumber(&$stub)
     {
-        $stub = str_replace('{{pagination}}', $perPage, $stub);
-
+        $pagination = $this->config->pagination;
+        $stub = str_replace('{{pagination}}', $pagination, $stub);
         return $this;
     }
 
@@ -475,10 +311,39 @@ EOD;
      *
      * @return $this
      */
-    protected function replaceFileSnippet(&$stub, $fileSnippet)
+    protected function replaceFileSnippet(&$stub)
     {
+        $fileSnippet = "";
+        $uploads = $this->crud
+            ->fields
+            ->map(fn (Field $f) => $f->useFileUploadClass())
+            ->filter();
+        if ($uploads->count()) {
+            $fileSnippet = $uploads->implode("\n\t\t");
+        }
         $stub = str_replace('{{fileSnippet}}', $fileSnippet, $stub);
+        return $this;
+    }
 
+    /**
+     * Replace class imports
+     *
+     * @param $stub
+     * @param $fileSnippet
+     *
+     * @return $this
+     */
+    protected function replaceImports(&$stub)
+    {
+        $useItems = "";
+        $imports = $this->crud
+            ->fields
+            ->map(fn (Field $f) => $f->includeFileUploadClass() ?? $f->includeEnumClass())
+            ->filter();
+        if ($imports->count()) {
+            $useItems = $imports->implode("\n");
+        }
+        $stub = str_replace('{{useItems}}', $useItems, $stub);
         return $this;
     }
 
@@ -490,10 +355,42 @@ EOD;
      *
      * @return $this
      */
-    protected function replaceWhereSnippet(&$stub, $whereSnippet)
+    protected function replaceWhereSnippet(&$stub)
     {
-        $stub = str_replace('{{whereSnippet}}', $whereSnippet, $stub);
+        $whereSnippet = $this->crud->fields->map(
+            fn (Field $f, $index) => ($index == 0)
+                ? "where('{$f->name()}', 'LIKE', \"%\$keyword%\")"
+                : "->orWhere('{$f->name()}', 'LIKE', \"%\$keyword%\")"
+        );
+        $stub = str_replace('{{whereSnippet}}', $whereSnippet->implode("\n\t\t\t"), $stub);
+        return $this;
+    }
 
+
+
+    protected function replaceSaveable(&$stub)
+    {
+        $crudNameSingular = $this->crud->crudNameSingular();
+        $saveable = $this->crud->fields->map(
+            fn (Field $f) => "\${$crudNameSingular}->{$f->name()} = \$request->{$f->name()};"
+        )->implode("\n\t\t");
+        $saveable .= "\n\t\t$" . $crudNameSingular . "->save();";
+        $stub = str_replace('{{saveable}}', $saveable, $stub);
+        return $this;
+    }
+
+
+    protected function replaceRelationsList(&$stub)
+    {
+        $relationsList = "";
+        if ($this->crud->relations->count()) {
+            $list = $this->crud->relations
+                ->map(fn (Relation $r) => $r->name())
+                ->implode(",");
+            $parsedList = Crud::parseFunctionParams($list);
+            $relationsList = "->with([{$parsedList}])";
+        }
+        $stub = str_replace('{{relationsList}}', $relationsList, $stub);
         return $this;
     }
 }

@@ -64,4 +64,14 @@ class DummyClass extends Authenticatable
     ];
 
      {{relationships}}
+
+     /**
+     * Check if a user has required permissions.
+     *
+     * @var array
+     */
+    public function hasPermission(string|array $permissions)
+    {
+        return false;
+    }
 }

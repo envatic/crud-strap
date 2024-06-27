@@ -2,9 +2,13 @@
 
 namespace Envatic\CrudStrap\Commands;
 
+use Envatic\CrudStrap\Fields\Field;
+use Envatic\CrudStrap\Fields\Relation;
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Str;
-class CrudModelCommand extends GeneratorCommand
+use Illuminate\Support\Stringable;
+
+class CrudModelCommand extends BaseCrud
 {
     /**
      * The name and signature of the console command.
@@ -13,15 +17,8 @@ class CrudModelCommand extends GeneratorCommand
      */
     protected $signature = 'crud:model
                             {name : The name of the model.}
-                            {--table= : The name of the table.}
-                            {--fillable= : The names of the fillable columns.}
-                            {--relationships= : The relationships for the model}
-                            {--casts= : The field casts of the model}
-                            {--use= : Imported Classes of the model}
-                            {--use-trait= : Imported Traits of the model}
-                            {--pk=id : The name of the primary key.}
-                            {--f|force : Force delete.}
-                            {--soft-deletes : Include soft deletes fields.}';
+                            {theme : Config theme for this crud.}
+                            {crud : Crud json file.}';
 
     /**
      * The console command description.
@@ -48,12 +45,10 @@ class CrudModelCommand extends GeneratorCommand
         $modelName = Str::of($name)->classBasename();
         $stub = 'model.stub';
         if ($modelName == 'User') {
-            $stub = config('crudstrap.user_teams_model')
-            ? 'UserWithTeams.stub'
-            : 'user.stub';
+            $stub = 'user.stub';
         }
         return config('crudstrap.custom_template')
-        ? config('crudstrap.path') . '/' . $stub
+            ? config('crudstrap.path') . '/' . $stub
             : __DIR__ . '/../stubs/' . $stub;
     }
     /**
@@ -65,172 +60,17 @@ class CrudModelCommand extends GeneratorCommand
      */
     protected function buildClass($name)
     {
-
         $stub = $this->files->get($this->getStub());
-        $table = $this->option('table') ?: $this->argument('name');
-        $fillable = $this->option('fillable');
-        $primaryKey = $this->option('pk');
-        $use = str_replace(';', ";\n", $this->option('use'));
-        $useTrait = str_replace(';', ";\n", $this->option('use-trait'));
-        $relationships = trim($this->option('relationships')) != '' ? explode(';', trim($this->option('relationships'))) : [];
-        $casts = trim($this->option('casts')) != '' ? explode(';', trim($this->option('casts'))) : [];
-        $softDeletes = $this->option('soft-deletes');
-        if (!empty($primaryKey)) {
-            $primaryKey = <<<EOD
-/**
-    * The database primary key value.
-    *
-    * @var string
-    */
-    protected \$primaryKey = '$primaryKey';
-EOD;
-        }
-
-        $ret = $this->replaceNamespace($stub, $name)
-            ->replaceTable($stub, $table)
-            ->replaceFillable($stub, $fillable)
-            ->replacePrimaryKey($stub, $primaryKey)
-            ->replaceSoftDelete($stub, $softDeletes)
-            ->replaceData($stub, $casts, $use, $useTrait);
-        foreach ($relationships as $rel) {
-            $parts = explode('#', $rel);
-            if (count($parts) != 3) {
-                continue;
-            }
-
-            // blindly wrap each arg in single quotes
-            $args = explode('|', trim($parts[2]));
-            $argsString = "";
-            if (trim($args[0]) != '') {
-                $argsString .=  $args[0] . '::class, ';
-                unset($args[0]);
-            }
-            foreach ($args as $k => $v) {
-                if (trim($v) == '') {
-                    continue;
-                }
-                $argsString .= "'" . trim($v) . "', ";
-            }
-
-            $argsString = substr($argsString, 0, -2);
-            // remove last comma
-            $ret->createRelationshipFunction($stub, trim($parts[0]), trim($parts[1]), $argsString);
-        }
-
-        $ret->replaceRelationshipPlaceholder($stub);
-        return $ret->replaceClass($stub, $name);
+        $this->replaceNamespace($stub, $name)
+            ->replaceTable($stub)
+            ->replaceFillable($stub)
+            ->replacePrimaryKey($stub)
+            ->replaceCasts($stub)
+            ->replaceImports($stub)
+            ->replaceTraits($stub)
+            ->replaceRelationships($stub);
+        return $this->replaceClass($stub, $name);
     }
-
-    /**
-     * Create the code for a model relationship
-     *
-     * @param string $stub
-     * @param string $relationshipName  the name of the function, e.g. owners
-     * @param string $relationshipType  the type of the relationship, hasOne, hasMany, belongsTo etc
-     * @param array $relationshipArgs   args for the relationship function
-     */
-    protected function createRelationshipFunction(&$stub, $relationshipName, $relationshipType, $argsString)
-    {
-        $mods = explode('|', $relationshipType);
-        $relationshipTypeName =  array_shift($mods);
-        $modifiers = "";
-        if (count($mods) > 0) {
-            foreach ($mods as $mod) {
-                $varString = explode(':', $mod);
-                $modname =  array_shift($varString);
-                $var = $varString[0] ?? null;
-                $modifiers .= "->" . $modname . "(" .  $var . ")";
-            }
-        }
-        $name = Str::contains($relationshipTypeName,'has')?'Owns':"Belongs To";
-        $tabIndent = '    ';
-        $item = Str::of($this->argument('name'))->singular()->lower()->explode('\\')->pop();
-        $code = "
-    /**\n
-    * Get the {$relationshipName} the {$item} {$name}.
-    *
-    * @return \Illuminate\Database\Eloquent\Relations\\{$relationshipTypeName}
-    */
-    ";
-        $code .= "public function " . $relationshipName . "()\n" . $tabIndent . "{\n" . $tabIndent . $tabIndent
-            . "return \$this->" . $relationshipTypeName . "(" . $argsString . ")" . $modifiers . ";"
-            . "\n" . $tabIndent . "}";
-
-        $str = '{{relationships}}';
-        $stub = str_replace($str, $code . "\n" . $tabIndent . $str, $stub);
-        return $this;
-    }
-
-    /**
-     * Create the code for a model relationship
-     *
-     * @param string $stub
-     * @param string $relationshipName  the name of the function, e.g. owners
-     * @param string $relationshipType  the type of the relationship, hasOne, hasMany, belongsTo etc
-     * @param array $relationshipArgs   args for the relationship function
-     */
-    protected function replaceData(&$stub,  $casts_array, $use, $useTrait)
-    {
-        $castStr = "";
-        if (count($casts_array)) {
-            $tabIndent = '    ';
-            $castStr = "protected \$casts = [\n";
-            foreach ($casts_array as $cast) {
-
-                $mods = explode('#', $cast);
-                if (empty($mods[0])) continue;
-                $castStr .= $tabIndent . $tabIndent . "'" . $mods[0] . "' => " . $mods[1] . ", \n";
-            }
-            $castStr .= $tabIndent . '];';
-        }
-        $replace = [
-            '{{casts}}' => $castStr,
-            '{{use}}' => $use,
-            '{{useTrait}}' => $useTrait,
-        ];
-        $stub = str_replace(
-            array_keys($replace),
-            array_values($replace),
-            $stub
-        );
-        return $this;
-    }
-
-    /**
-     * Replace the (optional) soft deletes part for the given stub.
-     *
-     * @param  string  $stub
-     * @param  string  $replaceSoftDelete
-     *
-     * @return $this
-     */
-    protected function replaceSoftDelete(&$stub, $replaceSoftDelete)
-    {
-        if ($replaceSoftDelete) {
-            $stub = str_replace('{{softDeletes}}', "use SoftDeletes;\n    ", $stub);
-            $stub = str_replace('{{useSoftDeletes}}', "use Illuminate\Database\Eloquent\SoftDeletes;\n", $stub);
-        } else {
-            $stub = str_replace('{{softDeletes}}', '', $stub);
-            $stub = str_replace('{{useSoftDeletes}}', '', $stub);
-        }
-
-        return $this;
-    }
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Get the default namespace for the class.
@@ -243,7 +83,27 @@ EOD;
         return $rootNamespace;
     }
 
-    
+    /**
+     * generate relationship functions
+     *
+     * @param  string  $stub
+     *
+     * @return $this
+     */
+
+    public function replaceRelationships(&$stub)
+    {
+        $relations = $this->crud
+            ->relations
+            ->map(fn (Relation $relation) => $relation->getFunctionString());
+        $code = $relations->implode("\n\t");
+        $stub = str_replace('{{relationships}}', $code, $stub);
+        return $this;
+    }
+
+
+
+
     /**
      * Replace the table for the given stub.
      *
@@ -252,10 +112,10 @@ EOD;
      *
      * @return $this
      */
-    protected function replaceTable(&$stub, $table)
+    protected function replaceTable(&$stub)
     {
+        $table = $this->crud->tableName();
         $stub = str_replace('{{table}}', $table, $stub);
-
         return $this;
     }
 
@@ -267,10 +127,14 @@ EOD;
      *
      * @return $this
      */
-    protected function replaceFillable(&$stub, $fillable)
+    protected function replaceFillable(&$stub)
     {
+        $fillableStr = $this->crud->fields
+            ->filter(fn (Field $f) => $f->isFillable())
+            ->map(fn (Field $f) => $f->name())
+            ->implode("',\n\t\t'");
+        $fillable = "[\n        '" . $fillableStr . "'\n   ]";;
         $stub = str_replace('{{fillable}}', $fillable, $stub);
-
         return $this;
     }
 
@@ -282,23 +146,91 @@ EOD;
      *
      * @return $this
      */
-    protected function replacePrimaryKey(&$stub, $primaryKey)
+    protected function replacePrimaryKey(&$stub)
     {
-        $stub = str_replace('{{primaryKey}}', $primaryKey, $stub);
+        $primaryKey = $this->config->primaryKey;
+        $primaryKeyBlock = <<<EOD
+/**
+    * The database primary key value.
+    *
+    * @var string
+    */
+    protected \$primaryKey = '$primaryKey';
+EOD;
+        $stub = str_replace('{{primaryKey}}', $primaryKeyBlock, $stub);
 
         return $this;
     }
 
-    
     /**
-     * remove the relationships placeholder when it's no longer needed
-     *
-     * @param $stub
+     * Replace casts placeholder in the stub.
+     * @param  string  $stub
      * @return $this
      */
-    protected function replaceRelationshipPlaceholder(&$stub)
+
+    protected function replaceCasts(&$stub)
     {
-        $stub = str_replace('{{relationships}}', '', $stub);
+        $castStr = "";
+        $casts = $this->crud->fields->map(function (Field $field) {
+            $cast = $field->cast();
+            if (!$cast) return null;
+            return "\t\t\t" .  $cast;
+        })->filter();
+        if ($casts->count()) {
+            $castStr = "protected function casts() {\n\t\t return [\n";
+            $castStr .= $casts->explode(",\n");
+            $castStr .= "\n\t\t];\n\t}";
+        }
+        $stub =  str_replace('{{casts}}', $castStr, $stub);
+        return $this;
+    }
+
+    /**
+     * Replace use imports placeholder in the stub.
+     * @param  string  $stub
+     * @return $this
+     */
+
+    protected function replaceImports(&$stub)
+    {
+        $imports = "";
+        if ($this->config->has('factory'))
+            $imports .= "use Illuminate\Database\Eloquent\Factories\HasFactory; \n";
+        if ($this->config->softdeletes)
+            $imports .=  "use Illuminate\Database\Eloquent\SoftDeletes;\n";
+        if ($this->config->has('enums')) {
+            $imports .= $this->crud->fields
+                ->filter(fn (Field $f) => $f->type()->isEnum())
+                ->map(fn (Field $f) => $f->includeEnumClass())
+                ->implode("\n");
+        }
+        if ($this->crud->hasUuid) {
+            $imports .= "use App\\Traits\\HasUuid; \n";
+        }
+        if ($this->crud->relations->count()) {
+            $imports .= $this->crud->relations
+                ->map(fn (Relation $f) => $f->getModelImport())
+                ->implode("\n");
+        }
+        $stub =  str_replace('{{use}}', $imports, $stub);
+        return $this;
+    }
+
+    /**
+     * Replace casts placeholder in the stub.
+     * @param  string  $stub
+     * @return $this
+     */
+
+    protected function replaceTraits(&$stub)
+    {
+        $traits = "";
+        if ($this->config->softdeletes)
+            $traits .=  "use SoftDeletes;\n";
+        if ($this->crud->hasUuid) {
+            $traits .= "use HasUuid; \n";
+        }
+        $stub =  str_replace('{{useTrait}}', $traits, $stub);
         return $this;
     }
 }
