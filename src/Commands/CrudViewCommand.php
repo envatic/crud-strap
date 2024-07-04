@@ -47,11 +47,6 @@ class CrudViewCommand extends Command
     public function __construct()
     {
         parent::__construct();
-        $crudJson = json_decode(trim($this->argument('crud')));
-        $config = new CrudConfig(...(config('crudstrap.themes.' . trim($this->argument('theme')))));
-        $this->config = $config->override($crudJson);
-        $this->crud = new CrudFile($crudJson, $this->config, $this->getNameInput());
-        $this->delimiter = config('crudstrap.delimiter', ['%%', '%%']);
     }
 
 
@@ -63,7 +58,11 @@ class CrudViewCommand extends Command
 
     public function handle()
     {
-        $this->reset();
+        $crudJson = json_decode(trim($this->argument('crud')));
+        $config = new CrudConfig(...(config('crudstrap.themes.' . trim($this->argument('theme')))));
+        $this->config = $config->override($crudJson);
+        $this->crud = new CrudFile($crudJson, $this->config, $this->getNameInput());
+        $this->delimiter = config('crudstrap.delimiter', ['%%', '%%']);
         $this->viewDirectoryPath = config('crudstrap.custom_template')
             ? config('crudstrap.path') . 'views/'
             : __DIR__ . '/../stubs/views/';
