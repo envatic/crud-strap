@@ -31,16 +31,13 @@ class CrudStrapServiceProvider extends ServiceProvider
     public function boot()
     {
         $source = realpath($raw = __DIR__ . '/../config/crudstrap.php') ?: $raw;
-        if ($this->app instanceof LaravelApplication && $this->app->runningInConsole()) {
-            $this->publishes([
-                $source => $this->app->configPath('crudstrap.php'),
-                __DIR__ . '/../publish/Components/' => base_path('resources/js/Components'),
-                //__DIR__ . '/../publish/Layouts/' => base_path('resources/js/Layouts'),
-                __DIR__ . '/stubs/' => base_path('resources/crud-strap/'),
-                __DIR__ . '/crud/' => base_path('crud'),
-            ], 'crudstrap');
-        }
-        
+        $this->publishes([
+            $source => $this->app->configPath('crudstrap.php'),
+            __DIR__ . '/../publish/Components/' => base_path('resources/js/Components'),
+            //__DIR__ . '/../publish/Layouts/' => base_path('resources/js/Layouts'),
+            __DIR__ . '/stubs/' => base_path('resources/crud-strap/'),
+            __DIR__ . '/crud/' => base_path('crud'),
+        ], 'crudstrap');
         $this->mergeConfigFrom($source, 'crudstrap');
     }
 

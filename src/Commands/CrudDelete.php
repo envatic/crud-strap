@@ -41,7 +41,7 @@ class CrudDelete extends Command
         $config = new CrudConfig(...$themeConfig);
         $listCruds = $this->option('crud');
         $cruds = explode(',', $this->option('crud'));
-        $files = File::allFiles(base_path($config->folder));
+        $files = File::allFiles($config->folder);
         $valid  =  $listCruds == "" ? collect($files) : collect($files)->filter(function ($file) use ($cruds) {
             $ext = explode('.', $file->getFilename());
             $nameStr = Str::of(preg_replace('/[(0-9)]+_/', '', array_shift($ext)));
