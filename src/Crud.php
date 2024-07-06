@@ -33,7 +33,7 @@ class Crud
         return false;
     }
 
-    protected static function getRoutes(Stringable $name, string $prefix, string $controller)
+    protected static function getRoutes(Stringable $name, string $controller, ?string $prefix)
     {
         $routeName = $name->lower()->plural()->snake();
         $routeVar = $routeName->singular();
@@ -47,6 +47,7 @@ class Crud
     Route::get('/{$routeName}/{{$routeVar}}/show', 'show')->name('show');
     Route::get('/{$routeName}/{{$routeVar}}/edit', 'edit')->name('edit');
     Route::put('/{$routeName}/{{$routeVar}}', 'update')->name('update');
+    Route::put('/{$routeName}/toggle/{{$routeVar}}', 'toggle')->name('toggle');
     Route::delete('/{$routeName}/{{$routeVar}}', 'destroy')->name('destroy');
 });
 #$routeName"
