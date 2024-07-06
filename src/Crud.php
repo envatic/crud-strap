@@ -10,9 +10,12 @@ class Crud
 {
 
 
-    public static function addResourceRoutes(Stringable $name, CrudConfig $config): bool
+    public static function addResourceRoutes(Stringable $name, CrudConfig $config)
     {
         $routeFile = base_path('routes/web.php');
+        $controller =  $name->ucfirst()->plural() . 'Controller';
+        $routeContent = static::getRoutes($name, $controller, $config->routeGroup);
+        $routes = "\n" . implode("\n", $routeContent);
         if (file_exists($routeFile)) {
             $controller =  $name->ucfirst()->plural() . 'Controller';
             $routeContent = static::getRoutes($name, $controller, $config->routeGroup);
@@ -21,10 +24,13 @@ class Crud
             $routeName = $name->lower()->plural()->snake();
             if (preg_match('/(\#' . $routeName . ')/', $file, $matches) == 1) {
                 $outfile = preg_replace('/(\#' . $routeName . ')(.*?)(\#' . $routeName . ')/s', $routes, $file);
-                return File::replace($routeFile,   $outfile);
+                File::replace($routeFile,   $outfile);
+                return true;
             }
-            return  File::append($routeFile, $routes);
+            File::append($routeFile, $routes);
+            return true;
         }
+        return false;
     }
 
     protected static function getRoutes(Stringable $name, string $prefix, string $controller)
@@ -61,7 +67,6 @@ class Crud
             } elseif ($value === 'false') {
                 return false;
             }
-
             return $value;
         }, $values);
     }
@@ -105,6 +110,7 @@ class Crud
         $null = static::convertValuesToNull($boolean);
         $clean = static::convertValuesToNumbers($null);
         return collect($clean)->map(function ($item) {
+            if (is_bool($item)) return json_encode($item);
             if (static::shouldSkipTypes($item))
                 return $item;
             if (is_string($item)) return "'$item'";

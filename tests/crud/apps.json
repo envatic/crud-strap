@@ -1,0 +1,92 @@
+{
+    "fields": [
+        {
+            "name": "envatoId",
+            "type": "bigint|unique",
+            "rules": "required|integer"
+        },
+        {
+            "name": "name",
+            "type": "string|nullable",
+            "rules": "required|string",
+            "form": {
+                "label": "Enter Your Name",
+                "placeholder": "Eg. Moses Lupin",
+                "help": "Provide a name that is memorable"
+            }
+        },
+        {
+            "name": "logo",
+            "type": "logo|nullable",
+            "rules": "required|string"
+        },
+        {
+            "name": "source",
+            "type": "select|default:'github'",
+            "options": {
+                "github": "Github Repository",
+                "bitbucket": "Bitbucket Repository",
+                "gitlab": "Gitlab App"
+            },
+            "rules": "required|url"
+        },
+        {
+            "name": "browser",
+            "type": "radiocards|default:'chrome'",
+            "options": {
+                "github": "Github Repository",
+                "bitbucket": "Bitbucket Repository",
+                "gitlab": "Gitlab App"
+            },
+            "rules": "required|string"
+        },
+        {
+            "name": "status",
+            "type": "radioselect|default:'pending'",
+            "options": {
+                "pending": "Pending Review",
+                "published": "Verified Live",
+                "paused": "Extra Action Needed",
+                "cancelled": "Removed"
+            },
+            "rules": "required|string"
+        },
+        {
+            "name": "description",
+            "type": "text|nullable",
+            "rules": "required|string"
+        },
+        {
+            "name": "starts_at",
+            "type": "timestamp|nullable",
+            "rules": "required|datetime"
+        },
+        {
+            "name": "ends_at",
+            "type": "timestamp|nullable",
+            "rules": "required|datetime"
+        },
+        {
+            "name": "active",
+            "type": "boolean|nullable|default:true",
+            "rules": "required|boolean"
+        },
+        {
+            "name": "repo_url",
+            "type": "string:600|nullable",
+            "rules": "required|url"
+        }
+    ],
+    "relationships": [
+        {
+            "name": "sites",
+            "type": "hasMany",
+            "class": "Site|app_id|id"
+        },
+        {
+            "name": "purchases",
+            "type": "hasMany",
+            "class": "Purchase|app_id|id"
+        }
+    ]
+}

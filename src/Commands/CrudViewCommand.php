@@ -61,7 +61,7 @@ class CrudViewCommand extends Command
         $crudJson = json_decode(trim($this->argument('crud')));
         $config = new CrudConfig(...(config('crudstrap.themes.' . trim($this->argument('theme')))));
         $this->config = $config->override($crudJson);
-        $this->crud = new CrudFile($crudJson, $this->config, $this->getNameInput());
+        $this->crud = new CrudFile($crudJson, $this->config, $this->argument('name'));
         $this->delimiter = config('crudstrap.delimiter', ['%%', '%%']);
         $this->viewDirectoryPath = config('crudstrap.custom_template')
             ? config('crudstrap.path') . 'views/'
@@ -86,8 +86,12 @@ class CrudViewCommand extends Command
             "{$start}crudNameSingular{$end}" => $this->crud->crudNameSingular(),
             "{$start}primaryKey{$end}" => $this->config->primaryKey,
             "{$start}modelName{$end}" => $this->crud->modelName(),
+            "{$start}InputImports{$end}" => $fields->unique(fn (Field $f) => $f->type()->name)->flatMap(function (Field $field) {
+                if (!$field->hasValidation()) return;
+                return $field->getFormInput()->imports() ?? [];
+            })->unique()->implode("\n"),
             "{$start}formFieldsHtml{$end}" =>  $fields->map(function (Field $field) {
-                if (!$field->hasForm()) return;
+                if (!$field->hasValidation()) return;
                 $formInput = $field->getFormInput()->render();
                 return "\t\t\t\t\t\t $formInput";
             })->implode("\n"),
@@ -96,9 +100,9 @@ class CrudViewCommand extends Command
             "{$start}tableBodyHtml{$end}" => $fields->map(fn (Field $f) => $f->tableBodyHtml())
                 ->implode("\n"),
             "{$start}filledVueForm{$end}" => $fields->map(fn (Field $f) => $f->filledVueForm())
-                ->implode("\n"),
+                ->implode(",\n"),
             "{$start}emptyVueForm{$end}" => $fields->map(fn (Field $f) => $f->emptyVueForm())
-                ->implode("\n"),
+                ->implode(",\n"),
         ];
         $dynamicViewTemplate = config('crudstrap.dynamic_view_template', ['index', 'create', 'edit']);
         foreach ($dynamicViewTemplate as $name) {
@@ -111,7 +115,7 @@ class CrudViewCommand extends Command
             $file = resource_path($vuePageDir . ucfirst($name) . '.vue');
             if (File::exists($vuefile) && File::isFile($vuefile)) {
                 if (!File::isDirectory(resource_path($vuePageDir)))
-                    File::makeDirectory(resource_path($vuePageDir));
+                    File::makeDirectory(path: resource_path($vuePageDir), recursive: true, force: true);
                 File::put($file, str_replace(array_keys($vars), array_values($vars), File::get($vuefile)));
                 continue;
             }

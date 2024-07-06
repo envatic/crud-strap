@@ -2,7 +2,7 @@
 
 return [
 
-    'custom_template' => true,
+    'custom_template' => false,
 
     /*
     |--------------------------------------------------------------------------
@@ -61,7 +61,7 @@ return [
             # default "crud/
             'folder' => "crud/",
             # default 'Models'
-            'modelNamespace' => 'Models',
+            'modelNamespace' => '',
             # Use softdeletes on the models. default true.
             'softdeletes' => true,
             /*
@@ -86,9 +86,24 @@ return [
         ],
 
         'chat' => [
-            'folder' => "crud/chat/",
+            'folder' => base_path("crud/chat/"),
             'force' => true,
             'only' => ['policy', 'controller', 'migration', 'route', 'model', 'resource', 'enums'],
+        ],
+        // use to run tests. Ignore
+        'test' => [
+            'folder' =>  realpath(__DIR__ . '/../tests/crud'),
+            'force' => true,
+            'only' => [
+                //'policy',
+                //'controller',
+                //'migration',
+                //'routes',
+                //'model',
+                //'resource',
+                //'enums',
+                'view'
+            ],
         ],
 
     ],

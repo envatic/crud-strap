@@ -3,8 +3,9 @@
 namespace Envatic\CrudStrap\Commands;
 
 use Illuminate\Support\Str;
+use Illuminate\Console\GeneratorCommand;
 
-class CrudEnumCommand extends BaseCrud
+class CrudEnumCommand extends GeneratorCommand
 {
 
 

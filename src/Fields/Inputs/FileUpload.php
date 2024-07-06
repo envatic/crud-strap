@@ -7,14 +7,14 @@ class FileUpload extends Input
     /**
      * render text area imports
      */
-    public function imports()
+    public function imports(): array
     {
-        return <<<IMP
-import FormInput from "@/Components/FormInput.vue";
-import LogoInput from "@/Components/LogoInput.vue";
-import LogoInputLocal from "@/Components/LogoInputLocal.vue";
-import fakeLogo from "@/Components/no-image-available-icon.jpeg?url";
-IMP;
+        return [
+            'import FormInput from "@/Components/FormInput.vue";',
+            'import LogoInput from "@/Components/LogoInput.vue";',
+            'import LogoInputLocal from "@/Components/LogoInputLocal.vue";',
+            'import fakeLogo from "@/Components/no-image-available-icon.jpeg?url";'
+        ];
     }
     /**
      * render textarea input

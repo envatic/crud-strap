@@ -3,10 +3,10 @@ import {useI18n} from "vue-i18n";
 import { HiArrowLeft } from "oh-vue-icons/icons";
 import Loading from "@/Components/Loading.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
-import { useForm, Link } from "@inertiajs/inertia-vue3";
+import { useForm, Link } from "@inertiajs/vue3";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import VueIcon from "@/Components/VueIcon.vue";
-
+%%InputImports%%
 const props = defineProps({
     title:{required:false,type:String},
     %%crudNameSingular%%:{type:Object,required:true},
@@ -18,7 +18,7 @@ const save = () => form.put(window.route("%%crudName%%.edit",props.%%crudNameSin
 </script>
 <template>
     <AdminLayout>
-        <Head :title="title ?? `Add New Coin`" />
+        <Head :title="title ?? `Edit %%modelName%%` " />
         <main class="h-full">
             <div class="relative h-full flex flex-auto flex-col px-4 sm:px-6 py-12 sm:py-6 md:px-8">
                 <div class="flex flex-col gap-4 h-full">

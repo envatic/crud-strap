@@ -58,7 +58,9 @@ class CrudResourceCommand extends ResourceMakeCommand
     {
         return $this->collection()
             ? $this->resolveStubPath('/stubs/resource-collection.stub')
-            : config('crudstrap.path') . '/resource.stub';
+            : (config('crudstrap.custom_template')
+                ? config('crudstrap.path') . '/resource.stub'
+                : __DIR__ . '/../stubs/resource.stub');
     }
 
 

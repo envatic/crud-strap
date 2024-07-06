@@ -13,9 +13,9 @@ class CrudConfig
         public $name = 'default',
         public $folder = 'crud/',
         public $formHelper = 'inertia',
-        public $modelNamespace = 'Models',
+        public $modelNamespace = '',
         public $softdeletes = true,
-        public $controllerNamespace = 'Http\\Controllers',
+        public $controllerNamespace = '',
         public $primaryKey = 'id',
         public $pagination = 25,
         public $routeGroup = null,
@@ -28,7 +28,7 @@ class CrudConfig
 
     public function override(object $crud): static
     {
-        if (!$crud->config) return $this;
+        if (!isset($crud?->config)) return $this;
         $config = $crud->config;
         $this->viewPath = $config->viewPath ?? $this->viewPath;
         $this->name = $config->name ?? $this->name;

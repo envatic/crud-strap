@@ -20,15 +20,23 @@ abstract class BaseCrud  extends GeneratorCommand
      *
      * @var CrudFile
      */
-    protected CrudFile $crud;
+    protected ?CrudFile $crud = null;
 
 
     public function handle()
     {
-        $crudJson = json_decode(trim($this->argument('crud')));
-        $config = new CrudConfig(...(config('crudstrap.themes.' . trim($this->argument('theme')))));
-        $this->config = $config->override($crudJson);
-        $this->crud = new CrudFile($crudJson, $this->config, $this->getNameInput());
+        if (!$this->crud) $this->init();
         parent::handle();
+    }
+
+    public function init()
+    {
+        $crudJson = json_decode(trim($this->argument('crud')));
+        $theme = $this->argument('theme');
+        $themeConfig = config('crudstrap.themes.' . trim($theme), null);
+        if (!$themeConfig) return $this->error('Invalid Theme');
+        $config = new CrudConfig(...$themeConfig);
+        $this->config = $config->override($crudJson);
+        $this->crud = new CrudFile($crudJson, $this->config, $this->argument('name'));
     }
 }

@@ -3,13 +3,14 @@ import Loading from "@/Components/Loading.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { Link, useForm } from "@inertiajs/vue3";
+%%InputImports%%
 defineProps({
     title:{required:false,type:String},
 });
 const form = useForm({
 %%emptyVueForm%%
 });
-const save = () => form.post(window.route("posts.create"));
+const save = () => form.post(window.route("%%crudName%%.create"));
 </script>
 <template>
 	<Head :title="title ?? `New %%modelName%%`" />
@@ -23,7 +24,7 @@ const save = () => form.post(window.route("posts.create"));
 						</div>
 						<div class="flex flex-col lg:flex-row lg:items-center gap-3">
 							<Link
-								:href="route('admin.coins.index')"
+								:href="route('admin.%%crudName%%.index')"
 								class="py-2.5 px-5 mr-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
 							>
 								<ArrowLeftIcon class="w-4 h-4 -ml-2 mr-2 inline-block" />

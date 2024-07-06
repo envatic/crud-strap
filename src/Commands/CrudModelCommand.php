@@ -18,7 +18,8 @@ class CrudModelCommand extends BaseCrud
     protected $signature = 'crud:model
                             {name : The name of the model.}
                             {theme : Config theme for this crud.}
-                            {crud : Crud json file.}';
+                            {crud : Crud json file.}
+                            {--f|force : Force delete.}';
 
     /**
      * The console command description.
@@ -72,15 +73,21 @@ class CrudModelCommand extends BaseCrud
         return $this->replaceClass($stub, $name);
     }
 
+
+
     /**
      * Get the default namespace for the class.
      *
-     * @param  string  $rootNamespace
+     * @param  string $rootNamespace
+     *
      * @return string
      */
     protected function getDefaultNamespace($rootNamespace)
     {
-        return $rootNamespace;
+        $base = $rootNamespace . '\Models';
+        $namespace = $this->config->modelNamespace;
+        if (!empty($namespace)) return $base . '\\' . $namespace;
+        return $base;
     }
 
     /**
@@ -178,7 +185,7 @@ EOD;
         })->filter();
         if ($casts->count()) {
             $castStr = "protected function casts() {\n\t\t return [\n";
-            $castStr .= $casts->explode(",\n");
+            $castStr .= $casts->implode(",\n");
             $castStr .= "\n\t\t];\n\t}";
         }
         $stub =  str_replace('{{casts}}', $castStr, $stub);
@@ -202,7 +209,8 @@ EOD;
             $imports .= $this->crud->fields
                 ->filter(fn (Field $f) => $f->type()->isEnum())
                 ->map(fn (Field $f) => $f->includeEnumClass())
-                ->implode("\n");
+                ->implode(";\n");
+            $imports .= ";\n";
         }
         if ($this->crud->hasUuid) {
             $imports .= "use App\\Traits\\HasUuid; \n";
@@ -210,7 +218,9 @@ EOD;
         if ($this->crud->relations->count()) {
             $imports .= $this->crud->relations
                 ->map(fn (Relation $f) => $f->getModelImport())
-                ->implode("\n");
+                ->unique()
+                ->implode(";\n");
+            $imports .= ";\n";
         }
         $stub =  str_replace('{{use}}', $imports, $stub);
         return $this;

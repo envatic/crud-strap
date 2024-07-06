@@ -5,13 +5,13 @@ namespace Envatic\CrudStrap\Fields\Inputs;
 class FormDatePicker extends Input
 {
 
-    public function imports()
+    public function imports(): array
     {
-        return <<<IMP
-import {DatePicker} from "v-calendar";
-import {UseTimeAgo} from "@vueuse/components";
-import FormLabel from "@/Components/FormLabel.vue";
-IMP;
+        return [
+            'import {DatePicker} from "v-calendar";',
+            'import {UseTimeAgo} from "@vueuse/components";',
+            'import FormLabel from "@/Components/FormLabel.vue";'
+        ];
     }
 
 

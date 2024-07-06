@@ -13,7 +13,7 @@ class Relation
     public function __construct(object $relation)
     {
         $this->name = $relation->name;
-        $this->name = $relation->type;
+        $this->type = $relation->type;
         $this->args = $relation->class ?? null;
     }
 

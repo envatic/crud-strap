@@ -4,11 +4,9 @@ namespace Envatic\CrudStrap\Fields\Inputs;
 
 class FormSwitch extends Input
 {
-    public function imports()
+    public function imports(): array
     {
-        return <<<IMP
-import FormSwitch from "@/Components/FormSwitch.vue";
-IMP;
+        return ['import FormSwitch from "@/Components/FormSwitch.vue";'];
     }
     public function render()
     {

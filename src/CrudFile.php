@@ -20,10 +20,11 @@ class CrudFile
         public string $name
     ) {
         $this->fields = collect($crud->fields)->map(function ($field) {
-            new Field($field, $this);
+            return new Field($field, $this);
         });
+
         $this->relations = collect($crud->relationships)->map(function ($relationships) {
-            new Relation($relationships, $this);
+            return new Relation($relationships, $this);
         });
         $this->hasUuid = $this->fields->contains(fn (Field $f) => $f->type()->isUuid());
         $this->crud_name = str($name);

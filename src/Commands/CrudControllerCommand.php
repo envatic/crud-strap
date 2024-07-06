@@ -35,20 +35,6 @@ class CrudControllerCommand extends BaseCrud
      */
     protected $type = 'Controller';
 
-    /**
-     * The config for this crud
-     *
-     * @var CrudConfig
-     */
-    protected CrudConfig $config;
-
-    /**
-     * The config for this crud
-     *
-     * @var CrudFile
-     */
-    protected CrudFile $crud;
-
 
 
 
@@ -71,12 +57,41 @@ class CrudControllerCommand extends BaseCrud
      * Get the default namespace for the class.
      *
      * @param  string $rootNamespace
+     *
      * @return string
      */
-    protected function getDefaultNamespace($rootNamespace): string
+    protected function getDefaultNamespace($rootNamespace)
     {
-        return $rootNamespace . '\\' .  $this->config->controllerNamespace;
+        $base = $rootNamespace . '\Http\Controllers';
+        $namespace = $this->config->controllerNamespace;
+        if (!empty($namespace)) return $base . '\\' . $namespace;
+        return $base;
     }
+
+
+    /**
+     * Parse the class name and format according to the root namespace.
+     *
+     * @param  string  $name
+     * @return string
+     */
+    protected function qualifyClass($name)
+    {
+        $name = ltrim($name, '\\/');
+
+        $name = str_replace('/', '\\', $name);
+
+        $rootNamespace = $this->rootNamespace();
+
+        if (Str::startsWith($name, $rootNamespace)) {
+            return $name . 'Controller';
+        }
+
+        return $this->qualifyClass(
+            $this->getDefaultNamespace(trim($rootNamespace, '\\')) . '\\' . $name
+        );
+    }
+
 
     /**
      * Determine if the class already exists.
@@ -95,7 +110,9 @@ class CrudControllerCommand extends BaseCrud
 
     protected function buildClass($name)
     {
+        $stub = $this->files->get($this->getStub());
         return $this->replaceNamespace($stub, $name)
+            ->replaceRelationsList($stub)
             ->replaceViewPath($stub)
             ->replaceViewName($stub)
             ->replaceCrudName($stub)
@@ -110,7 +127,6 @@ class CrudControllerCommand extends BaseCrud
             ->replaceFileSnippet($stub)
             ->replaceWhereSnippet($stub)
             ->replaceSaveable($stub)
-            ->replaceRelationsList($stub)
             ->replaceImports($stub)
             ->replaceClass($stub, $name);
     }
@@ -383,14 +399,17 @@ class CrudControllerCommand extends BaseCrud
     protected function replaceRelationsList(&$stub)
     {
         $relationsList = "";
+        $relationsLoadList = "";
         if ($this->crud->relations->count()) {
             $list = $this->crud->relations
                 ->map(fn (Relation $r) => $r->name())
                 ->implode(",");
             $parsedList = Crud::parseFunctionParams($list);
             $relationsList = "->with([{$parsedList}])";
+            $relationsLoadList = '${{crudNameSingular}}->load([' . $parsedList . ']);';
         }
         $stub = str_replace('{{relationsList}}', $relationsList, $stub);
+        $stub = str_replace('{{relationsLoadList}}', $relationsLoadList, $stub);
         return $this;
     }
 }

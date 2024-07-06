@@ -7,12 +7,12 @@ class FormTextArea extends Input
     /**
      * render text area imports
      */
-    public function imports()
+    public function imports(): array
     {
-        return <<<IMP
-import FormLabel from "@/Components/FormLabel.vue";
-import FormTextArea from "@/Components/FormTextArea.vue";
-IMP;
+        return [
+            'import FormLabel from "@/Components/FormLabel.vue"',
+            'import FormTextArea from "@/Components/FormTextArea.vue"'
+        ];
     }
     /**
      * render textarea input

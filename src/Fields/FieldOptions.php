@@ -34,10 +34,6 @@ class FieldOptions
         return $cases;
     }
 
-    public function getSelectOptions()
-    {
-        collect($this->options)->map(fn ($item, $key) => ['name' => $item, 'value' => $key]);
-    }
 
     public function getRadioCardOptions()
     {

@@ -2,7 +2,7 @@
 namespace DummyNamespace;
 use Inertia\Inertia;
 use DummyRootNamespaceHttp\Controllers\Controller;
-use DummyRootNamespace{{modelNamespace}}{{modelName}};
+use DummyRootNamespace{{modelNamespace}}\{{modelName}};
 use DummyRootNamespaceHttp\Resources\{{modelName}} as {{modelName}}Resource ;
 {{useItems}}
 use Illuminate\Http\Request;
@@ -54,11 +54,12 @@ class DummyClass extends Controller
      * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function show(Request $request , $id)
+    public function show(Request $request, {{modelName}} ${{crudNameSingular}})
     {
-        ${{crudNameSingular}}Model = {{modelName}}::query(){{relationsList}}->findOrFail($id);
-        ${{crudNameSingular}} = new {{modelName}}Resource(${{crudNameSingular}}Model);
-        return Inertia::render('{{viewPath}}{{viewName}}/Show', compact('{{crudNameSingular}}'));
+        {{relationsLoadList}}
+        return Inertia::render('{{viewPath}}{{viewName}}/Show', [
+            '{{crudNameSingular}}'=> new {{modelName}}Resource(${{crudNameSingular}}Model)
+        ]);
     }
 
     /**
@@ -66,11 +67,12 @@ class DummyClass extends Controller
      * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function edit(Request $request , $id)
+    public function edit(Request $request, {{modelName}} ${{crudNameSingular}})
     {
-        ${{crudNameSingular}}Model = {{modelName}}::findOrFail($id);
-        ${{crudNameSingular}} = new {{modelName}}Resource(${{crudNameSingular}}Model);
-        return Inertia::render('{{viewPath}}{{viewName}}/Edit', compact('{{crudNameSingular}}'));
+        {{relationsLoadList}}
+        return Inertia::render('{{viewPath}}{{viewName}}/Edit', [
+            '{{crudNameSingular}}'=> new {{modelName}}Resource(${{crudNameSingular}}Model)
+        ]);
     }
 
     /**
@@ -81,13 +83,27 @@ class DummyClass extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function update(Request $request , $id)
+    public function update(Request $request, {{modelName}} ${{crudNameSingular}})
     {
         {{validationRules}}
         {{fileSnippet}}
-        ${{crudNameSingular}} = {{modelName}}::findOrFail($id);
-{{saveable}}
+        {{saveable}}
         return back()->with('success', '{{modelName}} updated!');
+    }
+
+     /**
+     * toggle status of  the specified resource in storage.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param  int  $id
+     *
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function toggle(Request $request, {{modelName}} ${{crudNameSingular}})
+    {
+        ${{crudNameSingular}}->active = !${{crudNameSingular}}->active;
+        ${{crudNameSingular}}->save();
+        return back()->with('success', ${{crudNameSingular}}->active ? __(' :name {{modelName}} Enabled !', ['name' => ${{crudNameSingular}}->name]) : __(' :name  {{modelName}} Disabled!', ['name' => ${{crudNameSingular}}->name]));
     }
 
     /**
@@ -97,9 +113,9 @@ class DummyClass extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function destroy(Request $request , $id)
+    public function destroy(Request $request, {{modelName}} ${{crudNameSingular}})
     {
-        {{modelName}}::destroy($id);
+        ${{crudNameSingular}}->delete();
         return redirect()->route('{{routePrefix}}{{crudName}}.index')->with('success', '{{modelName}} deleted!');
     }
 }

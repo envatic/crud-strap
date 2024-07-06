@@ -16,7 +16,7 @@ class CrudMigrationCommand extends BaseCrud
     protected $signature = 'crud:migration
                             {name : The name of the migration.}
                             {theme : config theme for the migration.}
-                            {crud: Crud json data}
+                            {crud : Crud json data}
                             {--prefix= : optional timestamp prefix}';
 
     /**
@@ -41,13 +41,14 @@ class CrudMigrationCommand extends BaseCrud
      */
     public function handle()
     {
-        $migration = 'Create' . strtolower($this->getNameInput()) . '_table';
-        $filesNames = File::files(base_path() . '/database/migrations/');
+        $this->init();
+        $migration = 'Create_' . strtolower($this->getNameInput()) . '_table';
+        $filesNames = File::files(database_path('/migrations/'));
         $exists = false;
         foreach ($filesNames as $file) {
-            if (Str::contains($file->getFilename(),  $migration)) {
+            if (Str::contains($file->getFilename(),  strtolower($migration))) {
                 $exists = $file->getFilename();
-                if ($this->option('force')) {
+                if ($this->config->force) {
                     File::delete($file->getPathname());
                     $this->warn('Migration deleted:' . $file->getFilename());
                     $exists = false;
@@ -111,7 +112,7 @@ class CrudMigrationCommand extends BaseCrud
             $datePrefix = date('Y_m_d_His');
             return $datePrefix . $sss;
         });
-        return database_path('/migrations/') . $nameTime . $type . $name . '_table.php';
+        return strtolower(database_path('/migrations/') . $nameTime . $type . $name . '_table.php');
     }
     /**
      * Replace the schema_up for the given stub.
@@ -133,7 +134,7 @@ class CrudMigrationCommand extends BaseCrud
             : "\t\t";
         $schemaUp = "Schema::create('" . $tableName . "', function (Blueprint \$table) { \n\t\t\t" .
             "\$table->bigIncrements('" . $this->config->primaryKey . "');\n\t\t\t" .
-            $schemaFields . "\$table->timestamps();\n" .
+            $schemaFields . "\t\t\t\$table->timestamps();\n" .
             $softDeletesSnippets . "});";
         $stub = str_replace('{{schema_up}}', $schemaUp, $stub);
         return $this;

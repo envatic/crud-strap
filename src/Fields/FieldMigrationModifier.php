@@ -8,7 +8,7 @@ use Envatic\CrudStrap\Crud;
 class FieldMigrationModifier
 {
     public string $func;
-    public string $params;
+    public ?string $params;
     public $modifierLookup = [
         'comment',
         'default',
@@ -22,6 +22,8 @@ class FieldMigrationModifier
         'onDelete',
         'onUpdate',
     ];
+
+
     function __construct(public string $modifier)
     {
         [$func, $parameter] = explode(':', $modifier, 2) + [null, null];
@@ -31,7 +33,8 @@ class FieldMigrationModifier
 
     public function toMigration(): string
     {
-        if (!isset($this->modifierLookup[$this->func])) return "";
+
+        if (!in_array($this->func, $this->modifierLookup)) return "";
         $list = $this->params
             ? Crud::parseFunctionParams($this->params)
             : "";

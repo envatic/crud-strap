@@ -22,7 +22,7 @@ class Field
 
 
     protected FieldType $type;
-    protected
+
     function __construct(public object $field, public CrudFile $crudfile)
     {
         $this->type = new FieldType(trim($this->field->type), trim($this->field->name));
@@ -35,29 +35,29 @@ class Field
 
     public function hasForm(): bool
     {
-        return !!$this->field->form;
+        return isset($this->field->form);
     }
 
     public function label($str = false): ?string
     {
-        $name = str($this->field->name())->ucfirst();
-        if (!$this->field->form) return $str ? $name : ":label=\"{$name}\"";
+        $name = str($this->name())->ucfirst();
+        if (!$this->hasForm()) return $str ? $name : ":label=\"{$name}\"";
         if (!$this->field->form->label) return $str ? $name : ":label=\"{$name}\"";
         $label = str($this->field->form->label)->trim();
         return $str ? $label : ":label=\"\$t('{$label}')\"";
     }
 
-    public function placeholder($str = false): ?Stringable
+    public function placeholder($str = false): ?string
     {
-        if (!$this->field->form) return null;
+        if (!$this->hasForm()) return null;
         if (!$this->field->form->placeholder) return null;
         $placeholder = str($this->field->form->placeholder)->trim();
         return $str ? $placeholder : ":placeholder=\"\$t('{$placeholder}')\"";
     }
 
-    public function help($str = false): ?Stringable
+    public function help($str = false): ?string
     {
-        if (!$this->field->form) return null;
+        if (!$this->hasForm()) return null;
         if (!$this->field->form->help) return null;
         $help =  str($this->field->form->help)->trim();
         return $str ? $help : ":help=\"\$t('{$help}')\"";
@@ -79,8 +79,8 @@ class Field
     function getFileSnippet()
     {
         $snippet = <<<EOD
-        if (\$request->hasFile('{$this->field->name}')) {
-            \$requestData['{$this->field->name}'] = \$request->file('{$this->field->name}')
+        if (\$request->hasFile('{$this->name()}')) {
+            \$requestData['{$this->name()}'] = \$request->file('{$this->name()}')
                 ->store('uploads', 'public');
         }
 EOD;
@@ -93,6 +93,14 @@ EOD;
         if (isset($this->field->rules))
             return trim($this->field->rules);
         return null;
+    }
+
+    /**
+     * Validation Rules
+     */
+    public function hasValidation(): ?string
+    {
+        return isset($this->field->rules) && !!trim($this->field->rules);
     }
 
     /**
@@ -152,7 +160,7 @@ EOD;
 
 
 
-    public function getEnumClass(): string
+    public function getEnumClass(): string|null
     {
         if (!$this->type()->isEnum())  return null;
         $crud_name = $this->crudfile->name;
@@ -227,7 +235,7 @@ EOD;
 
     public function tableHeaderHtml()
     {
-        $sanitized = str($this->name())->ucwords()->replace('_', ' ');
+        $sanitized = str($this->name())->replace('_', ' ')->title();
         $label = "{{\$t('{$sanitized}')}}";
         return "\t\t\t\t\t\t\t\t\t<th scope=\"col\" class=\"px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider\">$label</th>";
     }

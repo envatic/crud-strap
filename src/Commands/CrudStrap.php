@@ -43,8 +43,10 @@ class CrudStrap extends Command
     public function handle()
     {
         $theme = $this->argument('theme');
-        $config = new CrudConfig(...(config('crudstrap.themes.' . trim($theme))));
-        $files = File::allFiles(base_path($config->folder));
+        $themeConfig = config('crudstrap.themes.' . trim($theme), null);
+        if (!$themeConfig) return $this->error('Invalid Theme');
+        $config = new CrudConfig(...$themeConfig);
+        $files = File::allFiles($config->folder);
         uasort(
             $files,
             function ($a, $b) {
@@ -100,6 +102,7 @@ class CrudStrap extends Command
                     ]));
                 }
             }
+
             if ($config->has('controller')) {
                 $this->call('crud:controller', array_filter([
                     'name' => $name,
@@ -107,20 +110,18 @@ class CrudStrap extends Command
                     'crud' => json_encode($data)
                 ]));
             }
+
+
             if ($config->has('model')) {
                 $this->call('crud:model', array_filter([
-                    'name' => $name,
+                    'name' => $name->singular(),
                     'theme' => $theme,
-                    'crud' => json_encode($data)
+                    'crud' => json_encode($data),
+                    '--force' => $config->force,
                 ]));
             }
-            if ($config->has('view')) {
-                $this->call('crud:view', array_filter([
-                    'name' => $name,
-                    'theme' => $theme,
-                    'crud' => json_encode($data)
-                ]));
-            }
+
+
             if ($config->has('routes')) {
                 $isAdded = Crud::addResourceRoutes($name, $config);
                 if ($isAdded) {
@@ -128,6 +129,15 @@ class CrudStrap extends Command
                 } else {
                     $this->info('Unable to add the routes for ' . $name);
                 }
+            }
+
+
+            if ($config->has('view')) {
+                $this->call('crud:view', array_filter([
+                    'name' => $name,
+                    'theme' => $theme,
+                    'crud' => json_encode($data)
+                ]));
             }
         }
         $this->callSilent('optimize');

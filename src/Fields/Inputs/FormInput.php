@@ -4,12 +4,12 @@ namespace Envatic\CrudStrap\Fields\Inputs;
 
 class FormInput extends Input
 {
-    public function imports()
+    public function imports(): array
     {
-        return <<<IMP
-import FormInput from "@/Components/FormInput.vue";
-IMP;
+        return ['import FormInput from "@/Components/FormInput.vue";'];
     }
+
+
     public function render()
     {
         $name = str($this->field->name());
