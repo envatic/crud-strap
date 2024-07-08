@@ -94,7 +94,7 @@ class CrudResourceCommand extends ResourceMakeCommand
             return "\t\t\t'{$fieldName}'=>\$this->{$fieldName},";
         });
         $relations = $this->crud->relations->map(fn (Relation $r) => $r->getResourceString());
-        $transformArray = "[\n" . $fields->implode("\n") . $relations->implode("\n") . "\n\t\t]";
+        $transformArray = "[\n" . $fields->implode("\n") . "\n" . $relations->implode("\n") . "\n\t\t]";
         $stub = str_replace('{{transformArray}}', $transformArray, $stub);
         return $this;
     }

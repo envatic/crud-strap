@@ -25,7 +25,9 @@ abstract class BaseCrud  extends GeneratorCommand
 
     public function handle()
     {
-        if (!$this->crud) $this->init();
+        $this->config = null;
+        $this->crud = null;
+        $this->init();
         parent::handle();
     }
 

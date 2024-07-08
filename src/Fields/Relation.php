@@ -31,7 +31,7 @@ class Relation
     protected function parseArgs()
     {
         $args = Str::of($this->args)->explode('|');
-        $className = $args->pop();
+        $className = $args->shift();
         $fullClass = Str::ucfirst($className) . "::class";
         return Crud::parseFunctionParams($fullClass . "," . $args->implode(','));
     }
@@ -101,10 +101,10 @@ class Relation
         $resource  = $this->relationModel();
         if (is_null($type)) return null;
         if ($this->isMorph())
-            return "\t\t\t'{$this->name}'=> \$this->whenMorhphed('{$this->name}')";
+            return "\t\t\t'{$this->name}'=> \$this->whenMorhphed('{$this->name}'),";
         return  Str::contains($type, 'Many')
-            ? "\t\t\t'{$this->name}'=> {$resource}::collection(\$this->whenLoaded('{$this->name}'))"
-            : "\t\t\t'{$this->name}'=> new {$resource}(\$this->whenLoaded('{$this->name}'))";
+            ? "\t\t\t'{$this->name}'=> {$resource}::collection(\$this->whenLoaded('{$this->name}')),"
+            : "\t\t\t'{$this->name}'=> new {$resource}(\$this->whenLoaded('{$this->name}')),";
     }
 
     /**
