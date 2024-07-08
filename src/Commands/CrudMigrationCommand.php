@@ -2,6 +2,7 @@
 
 namespace Envatic\CrudStrap\Commands;
 
+use Envatic\CrudStrap\Crud;
 use Envatic\CrudStrap\Fields\Field;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -174,10 +175,14 @@ class CrudMigrationCommand extends BaseCrud
     protected function dbIndexesString()
     {
         return collect($this->crud->indexes())->map(function ($index) {
-            if (is_string($index)) return "\$table->index(" . trim($index) . ")\n";
-            if (is_array($index))
-                return "\$table->index(" . implode(", ", $index) . ")\n";
+            if (!str($index)->contains(':')) return null;
+            [$func, $params] = explode(":", 2);
+            $func_inputs = Crud::parseFunctionParams($params);
+            if (str($params)->contains(','))
+                $func_inputs = "[" . $func_inputs . "]";
+            return "\$table->$func($func_inputs)\n";
         })
+            ->filter()
             ->implode("\t\t\t");
     }
 }

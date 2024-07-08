@@ -163,6 +163,9 @@ EOD;
     public function getEnumClass(): string|null
     {
         if (!$this->type()->isEnum())  return null;
+        if (isset($this->field->enum) && is_string($this->field->enum) && strlen($this->field->enum) > 3) {
+            return ucfirst($this->field->enum);
+        }
         $crud_name = $this->crudfile->name;
         $field_name = Str::of($this->name())->lower()->ucfirst();
         $model_name = Str::of($crud_name)->singular()->lower()->ucfirst();

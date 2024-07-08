@@ -4,7 +4,6 @@
         "primaryKey": "id",
         "softdeletes": false
     },
-    
     "fields": [
         {
             "name": "name",
@@ -51,11 +50,9 @@
         }
     ],
     "index": [
-        "profile_photo_path",
-        [
-            "name",
-            "email"
-        ]
+        "index:profile_photo_path",
+        "index:name,email",
+        "unique:name,email"
     ],
     "relationships": [
         {

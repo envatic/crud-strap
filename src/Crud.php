@@ -135,7 +135,7 @@ class Crud
     public function npm()
     {
         return [
-            "v-calendar",
+            "v-calendar@next",
             "@vueuse/components",
             "@vueuse/core",
             "@heroicons/vue",
