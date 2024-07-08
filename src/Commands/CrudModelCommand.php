@@ -209,7 +209,7 @@ EOD;
             $imports .= $this->crud->fields
                 ->filter(fn (Field $f) => $f->type()->isEnum())
                 ->map(fn (Field $f) => $f->includeEnumClass())
-                ->implode(";\n");
+                ->implode("\n");
             $imports .= ";\n";
         }
         if ($this->crud->hasUuid) {

@@ -121,6 +121,10 @@ EOD;
         if ($this->type()->isJson()) {
             return "'{$this->name()}' => 'array'";
         }
+        if ($this->type()->isEnum()) {
+            $class = $this->useEnumClass();
+            return "'{$this->name()}' => $class";
+        }
         return null;
     }
 
