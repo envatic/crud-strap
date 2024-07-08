@@ -24,6 +24,16 @@
             "rules": "required|string"
         },
         {
+            "name": "moza",
+            "type": "enum|default:0",
+            "options": [
+                "team",
+                "all",
+                "alone"
+            ],
+            "rules": "required|url"
+        },
+        {
             "name": "source",
             "type": "select|default:'github'",
             "options": {

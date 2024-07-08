@@ -89,7 +89,7 @@ class Relation
     function getModelImport()
     {
         $relation = ucfirst($this->relationType());
-        return "use \\Illuminate\\Database\\Eloquent\\Relations\\{$relation}";
+        return "use Illuminate\\Database\\Eloquent\\Relations\\{$relation}";
     }
 
     /**

@@ -2,7 +2,7 @@
 namespace DummyNamespace;
 use Inertia\Inertia;
 use DummyRootNamespaceHttp\Controllers\Controller;
-use DummyRootNamespace{{modelNamespace}}\{{modelName}};
+use DummyRootNamespaceModels{{modelNamespace}}\{{modelName}};
 use DummyRootNamespaceHttp\Resources\{{modelName}} as {{modelName}}Resource ;
 {{useItems}}
 use Illuminate\Http\Request;
@@ -58,7 +58,7 @@ class DummyClass extends Controller
     {
         {{relationsLoadList}}
         return Inertia::render('{{viewPath}}{{viewName}}/Show', [
-            '{{crudNameSingular}}'=> new {{modelName}}Resource(${{crudNameSingular}}Model)
+            '{{crudNameSingular}}'=> new {{modelName}}Resource(${{crudNameSingular}})
         ]);
     }
 
@@ -71,7 +71,7 @@ class DummyClass extends Controller
     {
         {{relationsLoadList}}
         return Inertia::render('{{viewPath}}{{viewName}}/Edit', [
-            '{{crudNameSingular}}'=> new {{modelName}}Resource(${{crudNameSingular}}Model)
+            '{{crudNameSingular}}'=> new {{modelName}}Resource(${{crudNameSingular}})
         ]);
     }
 

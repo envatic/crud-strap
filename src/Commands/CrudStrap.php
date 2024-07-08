@@ -99,6 +99,7 @@ class CrudStrap extends Command
                     $this->call('crud:enum', array_filter([
                         'name' =>  $enum->getEnumClass(),
                         '--cases' => $enum->options()->getEnumValues(),
+                        '--int' => $enum->options()->isIntEnum(),
                         '--force' => $config->force
                     ]));
                 }

@@ -24,7 +24,7 @@ class FieldOptions
         $cases = "";
         foreach ($this->options as $key => $field) {
             if (is_int($key)) {
-                $cases .= "\tcase {$field} = '{$key}';\n";
+                $cases .= "\tcase {$field} = {$key};\n";
             } else {
                 $name = Str::of($key)->replace(['-', '_', ':'], "_")->upper();
                 $value = $key;
@@ -32,6 +32,11 @@ class FieldOptions
             }
         }
         return $cases;
+    }
+
+    public function isIntEnum()
+    {
+        return is_array($this->options);
     }
 
 

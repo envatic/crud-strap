@@ -12,6 +12,7 @@ class CrudEnumCommand extends GeneratorCommand
     protected $signature = 'crud:enum
                             {name : The name of the model.}
                             {--cases= : The Field Data.}
+                            {--int : Force Int return.}
                             {--f|force : Force delete.}';
 
     /**
@@ -65,9 +66,11 @@ class CrudEnumCommand extends GeneratorCommand
     {
         $stub = $this->files->get($this->getStub());
         $cases = $this->option('cases');
+        $is_int = $this->option('int');
         $name = $this->argument('name');
         $namespace = 'App\\Enums';
         $replace = [
+            '{{type}}' => $is_int ? 'int' : 'string',
             '{{enumNamespace}}' => $namespace,
             '{{enum}}' => $name,
             '{{cases}}' => $cases
