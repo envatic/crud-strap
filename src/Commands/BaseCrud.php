@@ -13,7 +13,7 @@ abstract class BaseCrud  extends GeneratorCommand
      *
      * @var CrudConfig
      */
-    protected CrudConfig $config;
+    protected ?CrudConfig $config;
 
     /**
      * The config for this crud
