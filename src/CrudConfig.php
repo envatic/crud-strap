@@ -21,6 +21,7 @@ class CrudConfig
         public $routeGroup = null,
         public $force = false,
         public $inertia = true,
+        public $isPivot = false,
         public array $locales = ['en'],
         public array $only = ['all'],
     ) {
@@ -43,6 +44,7 @@ class CrudConfig
         $this->force = $config->force ?? $this->force;
         $this->locales = $config->locales ?? $this->locales;
         $this->inertia = $config->inertia ?? $this->inertia;
+        $this->isPivot = $config->isPivot ?? false;
         $this->only  = $config->only ?? $this->only;
         return $this;
     }

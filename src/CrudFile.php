@@ -62,7 +62,10 @@ class CrudFile
      */
     function tableName(): string
     {
-        return  Str::of($this->name)->plural()->snake()->value();
+        $name = Str::of($this->name)->snake();
+        return  $this->config->isPivot
+            ? $name->singular()->value()
+            : $name->plural()->value();
     }
 
     public function modelClass()

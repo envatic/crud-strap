@@ -69,6 +69,7 @@ class CrudStrap extends Command
                 $datePrefix = date('Y_m_d_');
                 $time = gmdate("His", $secs);
                 $migrationPrefix =  $datePrefix . $time;
+                if ($config->isPivot) $name = $name->singular();
                 $this->call('crud:migration', array_filter([
                     'name' => $name,
                     'theme' => $theme,
