@@ -176,13 +176,13 @@ class CrudMigrationCommand extends BaseCrud
     {
         return collect($this->crud->indexes())->map(function ($index) {
             if (!str($index)->contains(':')) return null;
-            [$func, $params] = explode(":", 2);
+            [$func, $params] = explode(":", $index, 2) + [null, null];
             $func_inputs = Crud::parseFunctionParams($params);
             if (str($params)->contains(','))
                 $func_inputs = "[" . $func_inputs . "]";
-            return "\$table->$func($func_inputs)\n";
+            return "\t\t\t\$table->$func($func_inputs)";
         })
             ->filter()
-            ->implode("\t\t\t");
+            ->implode(";\n") . ";\n";
     }
 }

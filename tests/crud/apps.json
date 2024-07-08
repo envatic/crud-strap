@@ -77,6 +77,10 @@
             "rules": "required|url"
         }
     ],
+    "indexes": [
+        "index:name,status",
+        "unique:repo_url,ends_at"
+    ],
     "relationships": [
         {
             "name": "sites",

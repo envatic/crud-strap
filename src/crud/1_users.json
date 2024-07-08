@@ -50,8 +50,6 @@
         }
     ],
     "index": [
-        "index:profile_photo_path",
-        "index:name,email",
         "unique:name,email"
     ],
     "relationships": [
