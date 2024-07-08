@@ -1,6 +1,7 @@
 <?php
 
-namespace Envatic\CrudStrap\Traits;
+namespace App\Traits;
+
 trait WhenMorphed
 {
     public function whenMorphed($relationship)
@@ -8,7 +9,7 @@ trait WhenMorphed
         return $this->whenLoaded($relationship, function () use ($relationship) {
             $morphType = $relationship . '_type';
             $morphAlias = $this->resource->$morphType;
-            $morphResourceClass = "App\\Http\\Resources\\".class_basename($morphAlias);
+            $morphResourceClass = "App\\Http\\Resources\\" . class_basename($morphAlias);
             return new $morphResourceClass($this->resource->{$relationship});
         });
     }

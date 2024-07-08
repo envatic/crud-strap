@@ -37,6 +37,8 @@ class CrudStrapServiceProvider extends ServiceProvider
             //__DIR__ . '/../publish/Layouts/' => base_path('resources/js/Layouts'),
             __DIR__ . '/stubs/' => base_path('resources/crud-strap/'),
             __DIR__ . '/crud/' => base_path('crud'),
+            __DIR__ . '/Traits/HasUuid.php.stub' => app_path('Traits/HasUuid.php'),
+            __DIR__ . '/Traits/WhenMorphed.php.stub' => app_path('Traits/WhenMorphed.php'),
         ], 'crudstrap');
         $this->mergeConfigFrom($source, 'crudstrap');
     }

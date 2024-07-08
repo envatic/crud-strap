@@ -1,6 +1,6 @@
 <?php
 
-namespace Envatic\CrudStrap\Traits;
+namespace App\Traits;
 
 use Illuminate\Support\Str;
 
