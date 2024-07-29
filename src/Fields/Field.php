@@ -109,7 +109,11 @@ EOD;
     public function cast(): ?string
     {
         if (isset($this->field->cast)) {
-            $cast_to = trim($this->field->cast);
+            $cast_to = str($this->field->cast)->trim();
+            if ($cast_to->contains('::class')) {
+                $class = $cast_to->explode('\\')->last();
+                return "'{$this->name()}' => $class";
+            }
             return "'{$this->name()}' => '$cast_to'";
         }
         if ($this->type()->isBool()) {
@@ -151,17 +155,32 @@ EOD;
             $enum_class = $this->useEnumClass();
             $rules = [...$rules, "new Enum($enum_class)"];
         }
+        $cast_to = str($this->field->cast ?? '')->trim();
+        if ($cast_to->contains('::class')) {
+            $class = $cast_to->explode('\\')->last();
+            $rules = [...$rules, "new Enum( $class)"];
+        }
         $rulesList = collect($rules)->implode(',');
         $ruleString =  "\n\t\t\t'{$this->name()}' => [{$rulesList}],";
         if ($this->type()->isFile()) {
             $key = $this->name();
-            $ruleString .= "\n\t\t\t'{$key}_uri' => ['required', 'string']";
-            $ruleString .= "\n\t\t\t'{$key}_upload' => ['required', 'boolean']";
-            $ruleString .= "\n\t\t\t'{$key}_path' => ['nullable', 'string', 'required_if:{$key}_upload,true']";
+            $ruleString .= "\n\t\t\t'{$key}_uri' => ['required', 'string'],";
+            $ruleString .= "\n\t\t\t'{$key}_upload' => ['required', 'boolean'],";
+            $ruleString .= "\n\t\t\t'{$key}_path' => ['nullable', 'string', 'required_if:{$key}_upload,true'],";
         }
         return $ruleString;
     }
 
+    public function includeCastClasses(): ?string
+    {
+        if (isset($this->field->cast) && str($this->field->cast)->contains('::class')) {
+            $class = str($this->field->cast)->replace('::class', '')->trim();
+            return "use $class;";
+        }
+        if ($this->type()->isEnum() && $this->crudfile->config->has('enums'))
+            return $this->includeEnumClass();
+        return null;
+    }
 
 
     public function getEnumClass(): string|null
@@ -201,7 +220,7 @@ EOD;
         if (!$this->type()->isFile()) return null;
         $name = $this->name();
         $crudNameSingular = $this->crudfile->crudNameSingular();
-        return "app(Uploads::class)->upload(\$request,  \${$crudNameSingular}, '$name')";
+        return "app(Uploads::class)->upload(\$request,  \${$crudNameSingular}, '$name');";
     }
 
     public function isFillable(): bool

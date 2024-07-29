@@ -8,8 +8,8 @@ use Illuminate\Support\Str;
 class Relation
 {
     public string $name;
-    public string $type;
-    public string $args;
+    public ?string $type;
+    public ?string $args;
     public function __construct(object $relation)
     {
         $this->name = $relation->name;

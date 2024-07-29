@@ -205,13 +205,11 @@ EOD;
             $imports .= "use Illuminate\Database\Eloquent\Factories\HasFactory; \n";
         if ($this->config->softdeletes)
             $imports .=  "use Illuminate\Database\Eloquent\SoftDeletes;\n";
-        if ($this->config->has('enums')) {
-            $imports .= $this->crud->fields
-                ->filter(fn (Field $f) => $f->type()->isEnum())
-                ->map(fn (Field $f) => $f->includeEnumClass())
-                ->implode("\n");
-            $imports .= ";\n";
-        }
+        $imports .= $this->crud->fields
+            ->map(fn (Field $f) => $f->includeCastClasses())
+            ->filter()
+            ->implode("\n");
+        $imports .= "\n";
         if ($this->crud->hasUuid) {
             $imports .= "use App\\Traits\\HasUuid; \n";
         }

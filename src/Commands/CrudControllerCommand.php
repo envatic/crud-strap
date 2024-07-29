@@ -354,7 +354,7 @@ class CrudControllerCommand extends BaseCrud
         $useItems = "";
         $imports = $this->crud
             ->fields
-            ->map(fn (Field $f) => $f->includeFileUploadClass() ?? $f->includeEnumClass())
+            ->map(fn (Field $f) => $f->includeFileUploadClass() ?? $f->includeCastClasses())
             ->filter();
         if ($imports->count()) {
             $useItems = $imports->implode("\n");

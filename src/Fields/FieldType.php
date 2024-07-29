@@ -232,7 +232,9 @@ class FieldType
 
     function isFile(): bool
     {
-        return $this->parsed() == 'file';
+        return $this->parsed() == 'file'
+        ||  $this->parsed() == 'logo'
+        ||  $this->parsed() == 'image';
     }
 
     function isJson(): bool
