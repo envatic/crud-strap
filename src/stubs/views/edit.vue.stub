@@ -14,7 +14,7 @@ const props = defineProps({
 const form = useForm({
 %%filledVueForm%%
 });
-const save = () => form.put(window.route("%%crudName%%.edit",props.%%crudNameSingular%%.%%primaryKey%%));
+const save = () => form.put(window.route("admin.%%crudName%%.update",props.%%crudNameSingular%%.%%primaryKey%%));
 </script>
 <template>
     <AdminLayout>
@@ -27,14 +27,18 @@ const save = () => form.put(window.route("%%crudName%%.edit",props.%%crudNameSin
                             <h3 class="h3">Edit %%modelName%%</h3>
                         </div>
                         <div class="flex flex-col lg:flex-row lg:items-center gap-3">
-                            <Link :href="route('admin.%%crudName%%.index')"
-                                class="py-2.5 px-5 mr-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                            <VueIcon :icon="HiArrowLeft" class="w-4 h-4 -ml-2 mr-2 inline-block" />
-                            {{ $t("Go Back to %%crudName%% list") }}</Link>
+                            <PrimaryButton
+                                secondary
+                                link
+								:href="route('admin.%%crudName%%.index')"
+							>
+								 <VueIcon :icon="HiArrowLeft" class="w-4 h-4 -ml-1 mr-2 inline-block" />
+								{{ $t("Back to %%crudName%% list") }}</PrimaryButton
+							>
                         </div>
                     </div>
                     <div class="card h-full border-0 card-border">
-                        <div class="card-body px-0 card-gutterless h-full">
+                        <div class="card-body card-gutterless h-full">
                             <form @submit.prevent="save" class="container lg:w-4/5">
                                 %%formFieldsHtml%%
                                 <div class="pt-12">

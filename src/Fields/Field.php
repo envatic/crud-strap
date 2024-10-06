@@ -240,10 +240,6 @@ EOD;
     {
         $input_type = $this->type()->getInputType();
         return match ($input_type) {
-            'text',
-            'password',
-            'email',
-            'number' => new FormInput($this),
             'textarea' => new FormTextArea($this),
             'date',
             'dateTime',
@@ -255,7 +251,12 @@ EOD;
             'switch' => new FormSwitch($this),
             'file',
             'logo',
-            'image' => new FileUpload($this)
+            'image' => new FileUpload($this),
+                //'text',
+                //'password',
+                //'email',
+                //'number',
+            default => new FormInput($this),
         };
     }
 

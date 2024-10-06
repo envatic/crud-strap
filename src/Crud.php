@@ -40,7 +40,7 @@ class Crud
         $prefix = $prefix ? "{$prefix}." : "";
         return [
             "#$routeName
- Route::name('{$prefix}{$routeName}')->controller({$controller}::class)->group(function () {
+ Route::name('{$prefix}{$routeName}.')->controller({$controller}::class)->group(function () {
     Route::get('/{$routeName}', 'index')->name('index');
     Route::get('/{$routeName}/create', 'create')->name('create');
     Route::post('/{$routeName}/store', 'store')->name('store');
