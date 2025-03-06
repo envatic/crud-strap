@@ -57,7 +57,7 @@ class CrudStrap extends Command
         foreach ($files as $file) {
             $fileData = $file->openFile();
             $data = json_decode($fileData->fread($fileData->getSize()));
-            $config = $config->override($data);
+            $config = (new CrudConfig(...$themeConfig))->override($data);
             if ($file->getExtension() != 'json') continue;
             $ext = explode('.', $file->getFilename());
             $nameStr = preg_replace('/[(0-9)]+_/', '', array_shift($ext));
@@ -94,7 +94,7 @@ class CrudStrap extends Command
             }
 
             if ($config->has('enums')) {
-                $enums = $crud->fields->filter(fn (Field $f) => $f->type()->isEnum());
+                $enums = $crud->fields->filter(fn(Field $f) => $f->type()->isEnum());
                 foreach ($enums as $enum) {
                     $this->call('crud:enum', array_filter([
                         'name' =>  $enum->getEnumClass(),

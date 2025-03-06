@@ -1,142 +1,112 @@
-# Laravel CRUD Generator
+# CrudStrap
 
-Advanced crud Generator for laravel
-Generates the following;
+CrudStrap is a powerful Laravel package that automates the creation of CRUD (Create, Read, Update, Delete) operations for your application. It generates controllers, models, views, migrations, and other necessary files based on your specifications, saving you time and effort in the development process.
 
-```
-Model (plus auto relationships, and  casts)
-Form validation ( In controller)
-Inertia (vue3) Controller or
-ApiResource
-Database migration
-Routes
-Policy
-Inertia views (vue3)
-php enums
-```
+## Features
 
-## Requirements
-
-    Laravel >= 11
-    PHP >= 8.3
+-   Generates CRUD operations for Laravel applications
+-   Creates controllers, models, views, migrations, and more
+-   Supports Inertia.js and Vue.js for frontend
+-   Customizable templates and configurations
+-   Handles relationships, validations, and file uploads
+-   Supports enum creation and usage
+-   Generates API resources and policies
 
 ## Installation
 
-```
-composer require envatic/crud-strap --dev
-```
+To install CrudStrap, run the following command in your Laravel project:
 
-## Step by Step
-
-1. Install crud-strap
-
-```
-composer require envatic/crud-strap --dev
+```bash
+composer require envatic/crudstrap
 ```
 
-2. Publish Assets
+After installation, publish the package assets:
 
+```bash
+php artisan vendor:publish --provider="Envatic\CrudStrap\CrudStrapServiceProvider"
 ```
-php artisan vendor:publish
+
+## Configuration
+
+The package configuration file is located at `config/crudstrap.php`. You can customize various aspects of the CRUD generation process, including:
+
+-   Custom templates
+-   Namespace settings
+-   Pagination
+-   Route groups
+-   Localization
+
+## Usage
+
+To generate CRUD files, use the `crud:strap` command:
+
+```bash
+php artisan crud:strap {theme}
 ```
 
-choose the crudstrap service provider
+Replace `{theme}` with the name of your desired theme configuration from the `config/crudstrap.php` file.
 
-3. Create a folder for your theme inside /crud folder eg /crud/admin/ in your laravel app
-4. Add your crudjson files in this folder
-   Example file for projects table.
+### Creating CRUD JSON Files
+
+Before running the command, create JSON files in your specified crud folder (default is `crud/`) to define your CRUD structures. Example:
 
 ```json
 {
 	"fields": [
 		{
-			"name": "user_id",
-			"type": "foreignId|constrained|onUpdate:'cascade'|onDelete:'cascade'",
-			"rules": "required|integer|exists:users,id"
-		},
-		{
-			"name": "uuid",
-			"type": "uuid"
-		},
-		{
-			"name": "name",
+			"name": "title",
 			"type": "string",
-			"rules": "required|string"
+			"rules": "required|max:255"
 		},
 		{
-			"name": "slug",
-			"type": "string",
-			"rules": "required|string"
-		},
-		{
-			"name": "description",
-			"type": "text|nullable",
-			"rules": "required|string"
-		},
-		{
-			"name": "status",
-			"type": "radioselect|default:'pending'",
-			"options": {
-				"pending": "Under Review",
-				"published": "Publish To Website",
-				"hidden": "Hide from Users",
-				"rejected": "Reject Project"
-			},
-			"rules": "required|string"
-		},
-		{
-			"name": "rank",
-			"type": "integer",
-			"rules": "required|string"
-		},
-		{
-			"name": "verified_at",
-			"type": "timestamp|nullable"
-		},
-		{
-			"name": "promoted_at",
-			"type": "timestamp|nullable"
+			"name": "content",
+			"type": "text",
+			"rules": "required"
 		}
 	],
 	"relationships": [
 		{
-			"name": "user",
+			"name": "author",
 			"type": "belongsTo",
-			"class": "User|user_id|id"
-		},
-		{
-			"name": "uploads",
-			"type": "morphMany",
-			"class": "Upload|uploadable"
-		},
-		{
-			"name": "logo",
-			"type": "morphOne|where:'key','logo'",
-			"class": "Upload|uploadable"
+			"class": "User"
 		}
 	]
 }
 ```
 
-5. Update `config/crudstrap.php` config file to include your new theme
+### Available Commands
 
-```php
- [
-    "name" => 'admin',
-    "view-path" => 'admin',
-    'folder' => "crud/admin",
-    'force' => true,
-    'model-namespace' => 'Models',
-    'only' => 'policy,controller,model,migration,route,factory,resource,enums',
-],
-```
+-   `crud:delete {theme}`: Remove generated CRUD files
 
-6. run
+## Frontend Components
 
-```php
-    php artisan crud:strap admin
-```
+CrudStrap provides various Vue components to use in your views:
+
+-   ConfirmationModal
+-   FormInput
+-   FormLabel
+-   FormTextArea
+-   Loading
+-   LogoInput
+-   Modal
+-   Pagination
+-   PrimaryButton
+-   RadioCards
+-   RadioSelect
+-   SearchInput
+-   Switch
+-   VueIcon
+
+These components are automatically published to your project's components directory.
+
+## Customization
+
+You can customize the generated files by modifying the stubs in the `resources/crud-strap/` directory after publishing the package assets.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the [License File](LICENSE) for details
+CrudStrap is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
