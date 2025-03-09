@@ -7,15 +7,13 @@ use Illuminate\Support\Str;
 class FieldOptions
 {
 
-    function __construct(public $options)
-    {
-    }
+    function __construct(public $options) {}
 
     public function getDatabaseEnums(): string
     {
         return collect($this->options)
             ->keys()
-            ->map(fn ($k) => "\"$k\"")
+            ->map(fn($k) => "\"$k\"")
             ->implode(",");
     }
 
@@ -32,6 +30,34 @@ class FieldOptions
             }
         }
         return $cases;
+    }
+
+    /**
+     * 
+     */
+    public function getEnumLabels(): string
+    {
+        $cases = "";
+        foreach ($this->options as $key => $field) {
+
+            if (is_int($key)) {
+                $cases .= "\t\t\tstatic::{$field} => {$field},\n";
+            } else {
+                $name = Str::of($key)->replace(['-', '_', ':'], "_")->upper();
+                $cases .= "\t\t\tstatic::{$name} => '{$field}',\n";
+            }
+        }
+        return <<<FUNC
+    /**
+    * Get labels for the enums
+    */
+    public function label()
+    {
+        return match (\$this) {
+$cases
+        };
+    }
+FUNC;
     }
 
     public function isIntEnum()

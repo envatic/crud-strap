@@ -81,7 +81,7 @@ class Crud
     public static function convertValuesToNumbers($values)
     {
         //preserve strings
-        return array_map(fn ($v) => static::shouldSkipTypes($v)
+        return array_map(fn($v) => static::shouldSkipTypes($v)
             ? $v
             : (is_numeric($v) ? $v * 1 : $v), $values);
     }
@@ -101,7 +101,7 @@ class Crud
 
     public static function shouldSkipTypes($item)
     {
-        return preg_match_all('~(?|"([^"]*)"|\'([^\']*)\')~', $item) || Str::of($item)->contains("::class");
+        return preg_match_all('~(?|"([^"]*)"|\'([^\']*)\')~', $item) || Str::of($item)->contains("::class") || $item === '0';
     }
 
     public static function parseFunctionParams($paramList)

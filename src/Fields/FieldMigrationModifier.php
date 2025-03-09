@@ -34,10 +34,11 @@ class FieldMigrationModifier
     public function toMigration(): string
     {
 
+
         if (!in_array($this->func, $this->modifierLookup)) return "";
         $list = $this->params
-            ? Crud::parseFunctionParams($this->params)
-            : "";
+            ?  Crud::parseFunctionParams($this->params)
+            : ($this->params == '0' ? '0' : "");
         return  "->{$this->func}($list)";
     }
 }
